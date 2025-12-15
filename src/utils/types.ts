@@ -1,7 +1,7 @@
 export type TIngredient = {
   _id: string;
   name: string;
-  type: string;
+  type: 'bun' | 'main' | 'sauce';
   proteins: number;
   fat: number;
   carbohydrates: number;
@@ -12,3 +12,21 @@ export type TIngredient = {
   image_mobile: string;
   __v: number;
 };
+
+export type TConstructorIngredient = TIngredient & {
+  uniqueId?: string;
+};
+
+export type IApiResponse<T> = {
+  success: boolean;
+  data: T;
+};
+
+export type TIngredientsResponse = IApiResponse<TIngredient[]>;
+
+export type TOrderResponse = IApiResponse<{
+  name: string;
+  order: {
+    number: number;
+  };
+}>;

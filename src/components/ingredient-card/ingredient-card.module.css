@@ -1,0 +1,27 @@
+.ingredient_card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ingredient_price {
+  display: flex;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.ingredient_name {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  background: url('../../../public/currency.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+}
