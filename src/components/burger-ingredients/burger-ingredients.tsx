@@ -8,7 +8,13 @@ import type { TIngredient } from '@utils/types';
 
 import styles from './burger-ingredients.module.css';
 
-export const BurgerIngredients = (): React.JSX.Element => {
+export type BurgerIngredientsProps = {
+  onIngredientClick?: (ingredient: TIngredient) => void;
+};
+
+export const BurgerIngredients = ({
+  onIngredientClick,
+}: BurgerIngredientsProps): React.JSX.Element => {
   const { ingredients, loading, error } = useIngredients();
   const [currentTab, setCurrentTab] = useState<'bun' | 'sauce' | 'main'>('bun');
 
@@ -117,7 +123,11 @@ export const BurgerIngredients = (): React.JSX.Element => {
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Булки</h2>
           <div className={styles.ingredients_grid}>
             {buns.map((ingredient: TIngredient) => (
-              <IngredientCard key={ingredient._id} ingredient={ingredient} />
+              <IngredientCard
+                key={ingredient._id}
+                ingredient={ingredient}
+                onClick={() => onIngredientClick?.(ingredient)}
+              />
             ))}
           </div>
         </section>
@@ -126,7 +136,11 @@ export const BurgerIngredients = (): React.JSX.Element => {
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Соусы</h2>
           <div className={styles.ingredients_grid}>
             {sauces.map((ingredient: TIngredient) => (
-              <IngredientCard key={ingredient._id} ingredient={ingredient} />
+              <IngredientCard
+                key={ingredient._id}
+                ingredient={ingredient}
+                onClick={() => onIngredientClick?.(ingredient)}
+              />
             ))}
           </div>
         </section>
@@ -137,7 +151,11 @@ export const BurgerIngredients = (): React.JSX.Element => {
           </h2>
           <div className={styles.ingredients_grid}>
             {mains.map((ingredient: TIngredient) => (
-              <IngredientCard key={ingredient._id} ingredient={ingredient} />
+              <IngredientCard
+                key={ingredient._id}
+                ingredient={ingredient}
+                onClick={() => onIngredientClick?.(ingredient)}
+              />
             ))}
           </div>
         </section>

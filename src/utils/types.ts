@@ -22,11 +22,15 @@ export type IApiResponse<T> = {
   data: T;
 };
 
-export type TIngredientsResponse = IApiResponse<TIngredient[]>;
-
-export type TOrderResponse = IApiResponse<{
+export type TOrderResponse = {
+  success: boolean;
   name: string;
   order: {
     number: number;
   };
-}>;
+};
+
+export type TIngredientsResponse = {
+  success: boolean;
+  data: TIngredient[];
+};

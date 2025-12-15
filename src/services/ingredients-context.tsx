@@ -1,8 +1,9 @@
-import useFetch from '@/hooks/useFetch';
+import { useFetch } from '@/hooks/useFetch';
 import { API_URL } from '@/utils/api';
+// services/ingredients-context.tsx
 import { createContext, useContext, type ReactNode } from 'react';
 
-import type { TIngredient } from '@/utils/types';
+import type { TIngredient } from '../utils/types';
 
 type IngredientsContextType = {
   ingredients: TIngredient[] | null;

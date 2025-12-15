@@ -1,47 +1,105 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-import type { IApiResponse } from '@utils/types';
+type TRequestMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
 
-type UseFetchResult<T> = {
+type UseFetchOptions<T> = {
+  method?: TRequestMethod;
+  body?: unknown;
+  headers?: HeadersInit;
+  onSuccess?: (data: T) => void;
+  onError?: (error: string) => void;
+};
+
+type UseFetchReturn<T> = {
   data: T | null;
   loading: boolean;
   error: string | null;
+  refetch: () => Promise<void>;
 };
 
-const useFetch = <T>(url: string): UseFetchResult<T> => {
+type ApiResponse<T> = {
+  success: boolean;
+  data?: T;
+  message?: string;
+};
+
+const isApiResponse = <T>(data: unknown): data is ApiResponse<T> => {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'success' in data &&
+    typeof (data as { success: unknown }).success === 'boolean'
+  );
+};
+
+export const useFetch = <T = unknown>(
+  url: string,
+  options?: UseFetchOptions<T>,
+  dependencies: unknown[] = []
+): UseFetchReturn<T> => {
   const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        setLoading(true);
-        const response = await fetch(url);
+  const fetchData = useCallback(async (): Promise<void> => {
+    setLoading(true);
+    setError(null);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    try {
+      const response = await fetch(url, {
+        method: options?.method ?? 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+        body: options?.body ? JSON.stringify(options.body) : undefined,
+      });
 
-        const result: IApiResponse<T> = (await response.json()) as IApiResponse<T>;
-
-        if (!result.success) {
-          throw new Error('API вернул неудачный ответ');
-        }
-
-        setData(result.data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Произошла неизвестная ошибка');
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
 
+      const result: unknown = await response.json();
+
+      if (isApiResponse<T>(result)) {
+        if (result.success) {
+          const resultData = result.data ?? (result as unknown as T);
+          setData(resultData);
+          options?.onSuccess?.(resultData);
+        } else {
+          throw new Error(result.message ?? 'Unknown error from API');
+        }
+      } else {
+        setData(result as T);
+        options?.onSuccess?.(result as T);
+      }
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'string'
+            ? err
+            : 'Unknown error';
+
+      setError(errorMessage);
+      options?.onError?.(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    url,
+    options?.method,
+    JSON.stringify(options?.headers),
+    JSON.stringify(options?.body),
+  ]);
+
+  useEffect(() => {
     void fetchData();
-  }, [url]);
+  }, dependencies);
 
-  return { data, loading, error };
+  const refetch = async (): Promise<void> => {
+    await fetchData();
+  };
+
+  return { data, loading, error, refetch };
 };
-
-export default useFetch;

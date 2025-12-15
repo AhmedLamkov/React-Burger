@@ -104,3 +104,15 @@
     width: 100%;
   }
 }
+
+.emptyBun,
+.emptyIngredient {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+  padding: 16px 24px;
+  background: var(--background-element);
+  border: 2px dashed var(--text-inactive-color);
+  border-radius: var(--common-border-radius);
+}

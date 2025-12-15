@@ -1,3 +1,4 @@
+import { useIngredients } from '@/services/ingredients-context';
 import {
   ConstructorElement,
   CurrencyIcon,
@@ -6,91 +7,117 @@ import {
 } from '@krgaa/react-developer-burger-ui-components';
 import { useMemo } from 'react';
 
-import { ingredients } from '@utils/ingredients';
-
-import type { TIngredient } from '@utils/types';
-import type React from 'react';
-
 import styles from './burger-constructor.module.css';
 
-const getIngredientPrice = (name: string): number => {
-  const priceMap: Record<string, number> = {
-    'Соус традиционный галактический': 30,
-    'Мясо бессмертных моллюсков Protostomia': 300,
-    'Плоды Фалленианского дерева': 80,
-    'Хрустящие минеральные кольца': 80,
-  };
-  return priceMap[name] ?? 0;
+export type BurgerConstructorProps = {
+  onOrderClick: () => void;
+  isOrderLoading: boolean;
 };
 
-const BurgerConstructor: React.FC = () => {
-  const selectedBun = ingredients.find(
-    (item) => item.name === 'Краторная булка N-200i'
-  )!;
+const BurgerConstructor: React.FC<BurgerConstructorProps> = ({
+  onOrderClick,
+  isOrderLoading,
+}) => {
+  const { ingredients } = useIngredients();
 
-  const selectedIngredients: TIngredient[] = [
-    ingredients.find((item) => item.name === 'Соус традиционный галактический')!,
-    ingredients.find((item) => item.name === 'Мясо бессмертных моллюсков Protostomia')!,
-    ingredients.find((item) => item.name === 'Плоды Фалленианского дерева')!,
-    ingredients.find((item) => item.name === 'Хрустящие минеральные кольца')!,
-    ingredients.find((item) => item.name === 'Хрустящие минеральные кольца')!,
-  ];
+  // Примерные выбранные ингредиенты
+  const selectedBun = useMemo(() => {
+    return ingredients?.find((item) => item.type === 'bun') ?? null;
+  }, [ingredients]);
+
+  const selectedIngredients = useMemo(() => {
+    return ingredients?.filter((item) => item.type !== 'bun').slice(0, 3) ?? [];
+  }, [ingredients]);
 
   const totalPrice = useMemo((): number => {
-    const bunPrice = 200;
-    const ingredientsPrice = 30 + 300 + 80 + 80 + 80;
+    const bunPrice = selectedBun ? selectedBun.price * 2 : 0;
+    const ingredientsPrice = selectedIngredients.reduce(
+      (sum, item) => sum + item.price,
+      0
+    );
     return bunPrice + ingredientsPrice;
-  }, []);
+  }, [selectedBun, selectedIngredients]);
 
   const handleOrderSubmit = (): void => {
-    console.log('Заказ оформлен!');
-    alert('Заказ оформлен!');
+    onOrderClick();
   };
+
+  if (!ingredients) {
+    return (
+      <section className={`${styles.constructor} pt-25 pl-4`}>
+        <p className="text text_type_main-default">Загрузка...</p>
+      </section>
+    );
+  }
 
   return (
     <section
       className={`${styles.constructor} pt-25 pl-4`}
       aria-label="Конструктор бургера"
     >
-      <div className={`${styles.bunSection} mb-4`}>
-        <ConstructorElement
-          type="top"
-          isLocked={true}
-          text={`${selectedBun.name} (верх)`}
-          price={20}
-          thumbnail={selectedBun.image}
-          extraClass={styles.constructorElement}
-        />
-      </div>
+      {selectedBun ? (
+        <div className={`${styles.bunSection} mb-4`}>
+          <ConstructorElement
+            type="top"
+            isLocked={true}
+            text={`${selectedBun.name} (верх)`}
+            price={selectedBun.price}
+            thumbnail={selectedBun.image}
+            extraClass={styles.constructorElement}
+          />
+        </div>
+      ) : (
+        <div className={`${styles.emptyBun} mb-4`}>
+          <p className="text text_type_main-default text_color_inactive">
+            Выберите булку
+          </p>
+        </div>
+      )}
 
-      <ul
-        className={`${styles.ingredientsList} custom-scroll pr-2`}
-        aria-label="Список начинок"
-      >
-        {selectedIngredients.map((item, index) => (
-          <li key={`${item._id}-${index}`} className={`${styles.constructorItem} mb-4`}>
-            <DragIcon type="primary" />
-            <ConstructorElement
-              text={item.name}
-              price={getIngredientPrice(item.name)}
-              thumbnail={item.image}
-              handleClose={(): void => console.log(`Удалить ${item.name}`)}
-              extraClass={styles.constructorElement}
-            />
+      <ul className={`${styles.ingredientsList} custom-scroll pr-2`}>
+        {selectedIngredients.length > 0 ? (
+          selectedIngredients.map((item, index) => (
+            <li
+              key={`${item._id}-${index}`}
+              className={`${styles.constructorItem} mb-4`}
+            >
+              <DragIcon type="primary" />
+              <ConstructorElement
+                text={item.name}
+                price={item.price}
+                thumbnail={item.image}
+                handleClose={(): void => console.log(`Удалить ${item.name}`)}
+                extraClass={styles.constructorElement}
+              />
+            </li>
+          ))
+        ) : (
+          <li
+            className={`${styles.emptyIngredient} text text_type_main-default text_color_inactive`}
+          >
+            Выберите начинку
           </li>
-        ))}
+        )}
       </ul>
 
-      <div className={`${styles.bunSection} mt-4`}>
-        <ConstructorElement
-          type="bottom"
-          isLocked={true}
-          text={`${selectedBun.name} (низ)`}
-          price={200} // 200 как на картинке
-          thumbnail={selectedBun.image}
-          extraClass={styles.constructorElement}
-        />
-      </div>
+      {selectedBun ? (
+        <div className={`${styles.bunSection} mt-4`}>
+          <ConstructorElement
+            type="bottom"
+            isLocked={true}
+            text={`${selectedBun.name} (низ)`}
+            price={selectedBun.price}
+            thumbnail={selectedBun.image}
+            extraClass={styles.constructorElement}
+          />
+        </div>
+      ) : (
+        <div className={`${styles.emptyBun} mt-4`}>
+          <p className="text text_type_main-default text_color_inactive">
+            Выберите булку
+          </p>
+        </div>
+      )}
 
       <div className={`${styles.orderSection} mt-10 pr-4`}>
         <div className={`${styles.totalPrice} text text_type_digits-medium mr-10`}>
@@ -102,8 +129,9 @@ const BurgerConstructor: React.FC = () => {
           type="primary"
           size="large"
           onClick={handleOrderSubmit}
+          disabled={isOrderLoading || !selectedBun || totalPrice === 0}
         >
-          Оформить заказ
+          {isOrderLoading ? 'Оформляем...' : 'Оформить заказ'}
         </Button>
       </div>
     </section>
