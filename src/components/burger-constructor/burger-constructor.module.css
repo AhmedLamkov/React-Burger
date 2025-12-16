@@ -1,7 +1,118 @@
-.burger_constructor {
+.constructor {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   width: 600px;
-  padding-bottom: 20px;
-  color: var(--text-primary-color);
+  min-height: 912px;
+}
+
+.bunSection {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 16px;
+}
+
+.constructorElement {
+  width: 536px;
+}
+
+.ingredientsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 80px;
+  max-height: 464px;
+  margin: 0;
+  padding: 0 8px 0 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+/* Кастомный скроллбар */
+
+.ingredientsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ingredientsList::-webkit-scrollbar-track {
+  background: #2f2f37;
+  border-radius: 4px;
+}
+
+.ingredientsList::-webkit-scrollbar-thumb {
+  background: #8585ad;
+  border-radius: 4px;
+}
+
+.ingredientsList::-webkit-scrollbar-thumb:hover {
+  background: #a5a5d6;
+}
+
+.constructorItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orderSection {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.totalPrice {
+  display: flex;
+  align-items: center;
+}
+
+/* Адаптивность */
+
+@media (width <= 1280px) {
+  .constructor {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+@media (width <= 768px) {
+  .constructor {
+    min-height: auto;
+    padding: 0 16px;
+  }
+
+  .ingredientsList {
+    max-height: 300px;
+  }
+
+  .orderSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .totalPrice {
+    justify-content: center;
+    margin-right: 0;
+  }
+
+  .bunSection {
+    padding-right: 8px;
+  }
+
+  .constructorElement {
+    width: 100%;
+  }
+}
+
+.emptyBun,
+.emptyIngredient {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+  padding: 16px 24px;
+  background: var(--background-element);
+  border: 2px dashed var(--text-inactive-color);
+  border-radius: var(--common-border-radius);
 }
