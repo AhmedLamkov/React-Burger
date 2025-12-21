@@ -1,35 +1,72 @@
-import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { AppHeader } from '@components/app-header/app-header';
 import BurgerConstructor from '@components/burger-constructor/burger-constructor';
 import { BurgerIngredients } from '@components/burger-ingredients/burger-ingredients';
 
+import { useAppDispatch, useAppSelector } from '../../services/hooks';
+import { clearIngredientDetails } from '../../services/ingredient-details/actions';
+import { closeModal } from '../../services/modal/actions';
+import { clearOrder } from '../../services/order/actions';
 import IngredientDetails from '../ingredient-details/ingredient-details';
 import Modal from '../modal/modal';
 import OrderDetails from '../order-details/order-details';
 
-import type { TIngredient } from '@/utils/types';
-
 import styles from './app.module.css';
 
 export const App = (): React.JSX.Element => {
-  const [isIngredientModalOpen, setIsIngredientModalOpen] = useState<boolean>(false);
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState<boolean>(false);
-  const [selectedIngredient, setSelectedIngredient] = useState<TIngredient | null>(null);
-  const [orderLoading, setOrderLoading] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const handleIngredientClick = (ingredient: TIngredient): void => {
-    setSelectedIngredient(ingredient);
-    setIsIngredientModalOpen(true);
+  const { isOpen: isModalOpen, modalType } = useAppSelector((state) => state.modal);
+
+  const currentIngredient = useAppSelector(
+    (state) => state.ingredientDetails.ingredient
+  );
+  const {
+    number: orderNumber,
+    isLoading: isOrderLoading,
+    error: orderError,
+  } = useAppSelector((state) => state.order);
+
+  const handleCloseModal = (): void => {
+    void dispatch(closeModal());
+
+    if (modalType === 'ingredientDetails') {
+      void dispatch(clearIngredientDetails());
+    }
+    if (modalType === 'orderDetails') {
+      void dispatch(clearOrder());
+    }
+
+    const background = (location.state as { background?: Location })?.background;
+    if (background) {
+      void navigate(background);
+    }
   };
 
-  const handleOrderClick = (): void => {
-    setOrderLoading(true);
-    setIsOrderModalOpen(true);
+  const renderModalContent = (): React.ReactNode => {
+    switch (modalType) {
+      case 'ingredientDetails':
+        return currentIngredient ? (
+          <IngredientDetails ingredient={currentIngredient} />
+        ) : (
+          <div className="text text_type_main-default">Ингредиент не найден</div>
+        );
 
-    setTimeout(() => {
-      setOrderLoading(false);
-    }, 1000);
+      case 'orderDetails':
+        return (
+          <OrderDetails
+            orderNumber={orderNumber ?? undefined}
+            isLoading={isOrderLoading}
+            error={orderError ?? undefined}
+          />
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
@@ -39,25 +76,16 @@ export const App = (): React.JSX.Element => {
         Соберите бургер
       </h1>
       <main className={`${styles.main} pl-5 pr-5`}>
-        <BurgerIngredients onIngredientClick={handleIngredientClick} />
-        <BurgerConstructor
-          onOrderClick={handleOrderClick}
-          isOrderLoading={orderLoading}
-        />
+        <BurgerIngredients />
+        <BurgerConstructor />
       </main>
 
-      {isIngredientModalOpen && selectedIngredient && (
+      {isModalOpen && (
         <Modal
-          title="Детали ингредиента"
-          onClose={() => setIsIngredientModalOpen(false)}
+          title={modalType === 'ingredientDetails' ? 'Детали ингредиента' : ''}
+          onClose={handleCloseModal}
         >
-          <IngredientDetails ingredient={selectedIngredient} />
-        </Modal>
-      )}
-
-      {isOrderModalOpen && (
-        <Modal onClose={() => setIsOrderModalOpen(false)}>
-          <OrderDetails isLoading={orderLoading} />
+          {renderModalContent()}
         </Modal>
       )}
     </div>

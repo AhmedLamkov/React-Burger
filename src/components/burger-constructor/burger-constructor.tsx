@@ -1,137 +1,169 @@
-import { useIngredients } from '@/services/ingredients-context';
+import { useAppDispatch, useAppSelector } from '@/services/hooks';
 import {
   ConstructorElement,
-  CurrencyIcon,
   Button,
-  DragIcon,
+  CurrencyIcon,
 } from '@krgaa/react-developer-burger-ui-components';
-import { useMemo } from 'react';
+import { useMemo, useCallback, useRef } from 'react';
+import { useDrop } from 'react-dnd';
+
+import {
+  addIngredient,
+  addBun,
+  removeIngredient,
+  moveIngredient,
+} from '../../services/burger-constructor/actions';
+import {
+  incrementIngredientCount,
+  decrementIngredientCount,
+} from '../../services/ingredients/actions';
+import { createOrder } from '../../services/order/thunk';
+import ConstructorItem from '../constructor-item/constructor-item';
+
+import type { TIngredient } from '../../utils/types';
+import type React from 'react';
 
 import styles from './burger-constructor.module.css';
 
-export type BurgerConstructorProps = {
-  onOrderClick: () => void;
-  isOrderLoading: boolean;
-};
+const BurgerConstructor: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const ref = useRef<HTMLDivElement>(null);
 
-const BurgerConstructor: React.FC<BurgerConstructorProps> = ({
-  onOrderClick,
-  isOrderLoading,
-}) => {
-  const { ingredients } = useIngredients();
+  const { bun, ingredients } = useAppSelector((state) => state.burgerConstructor);
+  const { isLoading } = useAppSelector((state) => state.order);
 
-  // Примерные выбранные ингредиенты
-  const selectedBun = useMemo(() => {
-    return ingredients?.find((item) => item.type === 'bun') ?? null;
-  }, [ingredients]);
+  const [{ isHover }, drop] = useDrop({
+    accept: 'ingredient',
+    drop(item: TIngredient) {
+      if (item.type === 'bun') {
+        dispatch(addBun(item));
+        dispatch(decrementIngredientCount(item._id));
+      } else {
+        const uniqueId = `${item._id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
-  const selectedIngredients = useMemo(() => {
-    return ingredients?.filter((item) => item.type !== 'bun').slice(0, 3) ?? [];
-  }, [ingredients]);
+        const ingredientWithId = {
+          ...item,
+          uniqueId,
+        };
 
-  const totalPrice = useMemo((): number => {
-    const bunPrice = selectedBun ? selectedBun.price * 2 : 0;
-    const ingredientsPrice = selectedIngredients.reduce(
-      (sum, item) => sum + item.price,
-      0
-    );
-    return bunPrice + ingredientsPrice;
-  }, [selectedBun, selectedIngredients]);
+        dispatch(addIngredient(ingredientWithId));
+        dispatch(incrementIngredientCount(item._id));
+      }
+    },
+    collect: (monitor) => ({
+      isHover: monitor.isOver(),
+    }),
+  });
 
-  const handleOrderSubmit = (): void => {
-    onOrderClick();
+  drop(ref);
+
+  const totalPrice = useMemo(() => {
+    const ingredientsPrice = ingredients.reduce((sum, item) => sum + item.price, 0);
+    const bunPrice = bun ? bun.price * 2 : 0;
+    return ingredientsPrice + bunPrice;
+  }, [bun, ingredients]);
+
+  const handleRemoveIngredient = useCallback(
+    (uniqueId: string, ingredientId: string): void => {
+      dispatch(removeIngredient(uniqueId));
+      dispatch(decrementIngredientCount(ingredientId));
+    },
+    [dispatch]
+  );
+
+  const handleCreateOrder = (): void => {
+    if (!bun) {
+      alert('Пожалуйста, добавьте булку!');
+      return;
+    }
+
+    if (ingredients.length === 0) {
+      alert('Пожалуйста, добавьте начинку!');
+      return;
+    }
+
+    const ingredientIds = [bun._id, ...ingredients.map((item) => item._id), bun._id];
+
+    void dispatch(createOrder(ingredientIds));
   };
 
-  if (!ingredients) {
-    return (
-      <section className={`${styles.constructor} pt-25 pl-4`}>
-        <p className="text text_type_main-default">Загрузка...</p>
-      </section>
-    );
-  }
+  const moveIngredientHandler = useCallback(
+    (dragIndex: number, hoverIndex: number): void => {
+      dispatch(moveIngredient({ dragIndex, hoverIndex }));
+    },
+    [dispatch]
+  );
+
+  const isOrderButtonDisabled = !bun || ingredients.length === 0 || isLoading;
 
   return (
     <section
-      className={`${styles.constructor} pt-25 pl-4`}
-      aria-label="Конструктор бургера"
+      className={`${styles.constructor} pt-25 pl-4 ${isHover ? styles.hover : ''}`}
+      ref={ref}
     >
-      {selectedBun ? (
-        <div className={`${styles.bunSection} mb-4`}>
+      <div className={styles.bun}>
+        {bun ? (
           <ConstructorElement
             type="top"
             isLocked={true}
-            text={`${selectedBun.name} (верх)`}
-            price={selectedBun.price}
-            thumbnail={selectedBun.image}
-            extraClass={styles.constructorElement}
+            text={`${bun.name} (верх)`}
+            price={bun.price}
+            thumbnail={bun.image}
           />
-        </div>
-      ) : (
-        <div className={`${styles.emptyBun} mb-4`}>
-          <p className="text text_type_main-default text_color_inactive">
-            Выберите булку
-          </p>
-        </div>
-      )}
+        ) : (
+          <div className={`${styles.empty} ${styles.top}`}>
+            <p className="text text_type_main-default">Перетащите булку сюда</p>
+          </div>
+        )}
+      </div>
 
-      <ul className={`${styles.ingredientsList} custom-scroll pr-2`}>
-        {selectedIngredients.length > 0 ? (
-          selectedIngredients.map((item, index) => (
-            <li
-              key={`${item._id}-${index}`}
-              className={`${styles.constructorItem} mb-4`}
-            >
-              <DragIcon type="primary" />
-              <ConstructorElement
-                text={item.name}
-                price={item.price}
-                thumbnail={item.image}
-                handleClose={(): void => console.log(`Удалить ${item.name}`)}
-                extraClass={styles.constructorElement}
-              />
-            </li>
+      <div className={styles.scrollable}>
+        {ingredients.length > 0 ? (
+          ingredients.map((item, index) => (
+            <ConstructorItem
+              key={item.uniqueId}
+              index={index}
+              ingredient={item}
+              onRemove={() => handleRemoveIngredient(item.uniqueId, item._id)}
+              moveIngredient={moveIngredientHandler}
+            />
           ))
         ) : (
-          <li
-            className={`${styles.emptyIngredient} text text_type_main-default text_color_inactive`}
-          >
-            Выберите начинку
-          </li>
+          <div className={styles.empty}>
+            <p className="text text_type_main-default">Перетащите начинку сюда</p>
+          </div>
         )}
-      </ul>
+      </div>
 
-      {selectedBun ? (
-        <div className={`${styles.bunSection} mt-4`}>
+      <div className={styles.bun}>
+        {bun ? (
           <ConstructorElement
             type="bottom"
             isLocked={true}
-            text={`${selectedBun.name} (низ)`}
-            price={selectedBun.price}
-            thumbnail={selectedBun.image}
-            extraClass={styles.constructorElement}
+            text={`${bun.name} (низ)`}
+            price={bun.price}
+            thumbnail={bun.image}
           />
-        </div>
-      ) : (
-        <div className={`${styles.emptyBun} mt-4`}>
-          <p className="text text_type_main-default text_color_inactive">
-            Выберите булку
-          </p>
-        </div>
-      )}
+        ) : (
+          <div className={`${styles.empty} ${styles.bottom}`}>
+            <p className="text text_type_main-default">Перетащите булку сюда</p>
+          </div>
+        )}
+      </div>
 
-      <div className={`${styles.orderSection} mt-10 pr-4`}>
-        <div className={`${styles.totalPrice} text text_type_digits-medium mr-10`}>
-          <span className="mr-2">{totalPrice}</span>
+      <div className={`${styles.total} mt-10`}>
+        <div className={styles.price}>
+          <span className="text text_type_digits-medium">{totalPrice}</span>
           <CurrencyIcon type="primary" />
         </div>
         <Button
-          htmlType="button"
           type="primary"
+          htmlType="button"
           size="large"
-          onClick={handleOrderSubmit}
-          disabled={isOrderLoading || !selectedBun || totalPrice === 0}
+          onClick={handleCreateOrder}
+          disabled={isOrderButtonDisabled}
         >
-          {isOrderLoading ? 'Оформляем...' : 'Оформить заказ'}
+          {isLoading ? 'Оформляем...' : 'Оформить заказ'}
         </Button>
       </div>
     </section>

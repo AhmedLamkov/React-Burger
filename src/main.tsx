@@ -1,8 +1,12 @@
 import React from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './components/app/app';
-import { IngredientsProvider } from './services/ingredients-context';
+import { store } from './services/store';
 
 import './index.css';
 
@@ -10,8 +14,12 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 
 root.render(
   <React.StrictMode>
-    <IngredientsProvider>
-      <App />
-    </IngredientsProvider>
+    <Provider store={store}>
+      <DndProvider backend={HTML5Backend}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </DndProvider>
+    </Provider>
   </React.StrictMode>
 );
