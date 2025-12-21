@@ -1,5 +1,5 @@
 import { Tab } from '@krgaa/react-developer-burger-ui-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 import { useAppDispatch, useAppSelector } from '../../services/hooks';
 import { fetchIngredients } from '../../services/ingredients/thunk';
@@ -21,8 +21,6 @@ export const BurgerIngredients: React.FC = () => {
   const sauceRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleScrollRef = useRef<() => void>(undefined);
 
   const buns: TIngredient[] = ingredients.filter((item) => item.type === 'bun');
   const sauces: TIngredient[] = ingredients.filter((item) => item.type === 'sauce');
@@ -51,37 +49,59 @@ export const BurgerIngredients: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    handleScrollRef.current = (): void => {
-      const container = containerRef.current;
-      if (!container) return;
+  const handleScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-      const scrollTop = container.scrollTop;
-      const sectionHeight = container.scrollHeight / 3;
+    const scrollTop = container.scrollTop;
 
-      if (scrollTop < sectionHeight) {
-        setCurrentTab('bun');
-      } else if (scrollTop < sectionHeight * 2) {
-        setCurrentTab('sauce');
-      } else {
-        setCurrentTab('main');
-      }
-    };
-  });
+    const sauceTop = sauceRef.current?.offsetTop ?? 0;
+    const mainTop = mainRef.current?.offsetTop ?? 0;
+
+    let activeTab: 'bun' | 'sauce' | 'main' = 'bun';
+
+    const threshold = 50;
+
+    if (scrollTop < sauceTop - threshold) {
+      activeTab = 'bun';
+    } else if (scrollTop < mainTop - threshold) {
+      activeTab = 'sauce';
+    } else {
+      activeTab = 'main';
+    }
+
+    if (scrollTop <= threshold) {
+      activeTab = 'bun';
+    }
+
+    if (activeTab !== currentTab) {
+      setCurrentTab(activeTab);
+    }
+  }, [currentTab]);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !handleScrollRef.current) return;
+    if (!container || isLoading || error || ingredients.length === 0) return;
 
-    const handleScroll = (): void => handleScrollRef.current?.();
+    let ticking = false;
+    const throttledHandleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
 
-    container.addEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', throttledHandleScroll);
+
     handleScroll();
 
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('scroll', throttledHandleScroll);
     };
-  }, []);
+  }, [handleScroll, isLoading, error, ingredients.length]);
 
   if (isLoading) {
     return (
@@ -128,7 +148,7 @@ export const BurgerIngredients: React.FC = () => {
       </nav>
 
       <div ref={containerRef} className={styles.ingredients_container}>
-        <section ref={bunRef} className={styles.ingredients_section} data-section="bun">
+        <section ref={bunRef} className={styles.ingredients_section}>
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Булки</h2>
           <div className={styles.ingredients_grid}>
             {buns.map((ingredient: TIngredient) => (
@@ -137,11 +157,7 @@ export const BurgerIngredients: React.FC = () => {
           </div>
         </section>
 
-        <section
-          ref={sauceRef}
-          className={styles.ingredients_section}
-          data-section="sauce"
-        >
+        <section ref={sauceRef} className={styles.ingredients_section}>
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Соусы</h2>
           <div className={styles.ingredients_grid}>
             {sauces.map((ingredient: TIngredient) => (
@@ -150,11 +166,7 @@ export const BurgerIngredients: React.FC = () => {
           </div>
         </section>
 
-        <section
-          ref={mainRef}
-          className={styles.ingredients_section}
-          data-section="main"
-        >
+        <section ref={mainRef} className={styles.ingredients_section}>
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>
             Начинки
           </h2>

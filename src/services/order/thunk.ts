@@ -1,5 +1,6 @@
 import { clearConstructor } from '../burger-constructor/actions';
 import { resetIngredientsCount } from '../ingredients/actions';
+import { openModal } from '../modal/actions';
 import { createOrderRequest, createOrderSuccess, createOrderFailed } from './actions';
 
 import type { AppDispatch } from '../store';
@@ -14,7 +15,6 @@ type OrderResponse = {
   };
 };
 
-// Исправьте типизацию
 export const createOrder = (
   ingredientIds: string[]
 ): ((dispatch: AppDispatch) => Promise<void>) => {
@@ -45,8 +45,19 @@ export const createOrder = (
             name: data.order.name ?? 'Ваш заказ',
           })
         );
+
         dispatch(clearConstructor());
         dispatch(resetIngredientsCount());
+
+        dispatch(
+          openModal({
+            type: 'orderDetails',
+            data: {
+              number: data.order.number,
+              name: data.order.name ?? 'Ваш заказ',
+            },
+          })
+        );
       } else {
         dispatch(createOrderFailed('API вернул success: false'));
       }
