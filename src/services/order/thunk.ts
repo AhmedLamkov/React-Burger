@@ -1,3 +1,4 @@
+import { fetchWithCheck } from '../../utils/api';
 import { clearConstructor } from '../burger-constructor/actions';
 import { resetIngredientsCount } from '../ingredients/actions';
 import { openModal } from '../modal/actions';
@@ -5,10 +6,9 @@ import { createOrderRequest, createOrderSuccess, createOrderFailed } from './act
 
 import type { AppDispatch } from '../store';
 
-const API_URL = 'https://norma.education-services.ru/api';
-
-type OrderResponse = {
+type TOrderResponse = {
   success: boolean;
+  name?: string;
   order: {
     number: number;
     name?: string;
@@ -22,7 +22,7 @@ export const createOrder = (
     dispatch(createOrderRequest());
 
     try {
-      const response = await fetch(`${API_URL}/orders`, {
+      const data = await fetchWithCheck<TOrderResponse>('/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,35 +32,25 @@ export const createOrder = (
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Ошибка сервера: ${response.status}`);
-      }
+      dispatch(
+        createOrderSuccess({
+          number: data.order.number,
+          name: data.order.name ?? data.name ?? 'Ваш заказ',
+        })
+      );
 
-      const data = (await response.json()) as OrderResponse;
+      dispatch(clearConstructor());
+      dispatch(resetIngredientsCount());
 
-      if (data.success) {
-        dispatch(
-          createOrderSuccess({
+      dispatch(
+        openModal({
+          type: 'orderDetails',
+          data: {
             number: data.order.number,
-            name: data.order.name ?? 'Ваш заказ',
-          })
-        );
-
-        dispatch(clearConstructor());
-        dispatch(resetIngredientsCount());
-
-        dispatch(
-          openModal({
-            type: 'orderDetails',
-            data: {
-              number: data.order.number,
-              name: data.order.name ?? 'Ваш заказ',
-            },
-          })
-        );
-      } else {
-        dispatch(createOrderFailed('API вернул success: false'));
-      }
+            name: data.order.name ?? data.name ?? 'Ваш заказ',
+          },
+        })
+      );
     } catch (error: unknown) {
       console.error('Ошибка при создании заказа:', error);
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';

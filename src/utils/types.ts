@@ -12,26 +12,30 @@ export type TIngredient = {
   image_mobile: string;
   __v: number;
   count?: number;
+  uniqueId?: string;
 };
 
 export type TConstructorIngredient = TIngredient & {
   uniqueId?: string;
 };
 
-export type IApiResponse<T> = {
+export type IOrderData = {
+  number: number;
+  name?: string;
+};
+export type IBaseApiResponse = {
   success: boolean;
-  data: T;
+  message?: string;
 };
 
-export type TOrderResponse = {
-  success: boolean;
-  name: string;
+export type IOrderResponse = {
+  name?: string;
   order: {
     number: number;
+    name?: string;
   };
-};
+} & IBaseApiResponse;
 
-export type TIngredientsResponse = {
-  success: boolean;
+export type IIngredientsResponse = {
   data: TIngredient[];
-};
+} & IBaseApiResponse;
