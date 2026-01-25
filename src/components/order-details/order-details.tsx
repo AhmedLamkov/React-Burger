@@ -3,11 +3,23 @@ import type { FC } from 'react';
 import styles from './order-details.module.css';
 
 type OrderDetailsProps = {
+  orderNumber?: number;
   isLoading?: boolean;
+  error?: string;
 };
 
-const OrderDetails: FC<OrderDetailsProps> = ({ isLoading = false }) => {
-  const orderNumber = 34536;
+const OrderDetails: FC<OrderDetailsProps> = ({
+  orderNumber,
+  isLoading = false,
+  error,
+}) => {
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <p className="text text_type_main-medium text_color_error">Ошибка: {error}</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -20,7 +32,7 @@ const OrderDetails: FC<OrderDetailsProps> = ({ isLoading = false }) => {
   return (
     <div className={styles.container} data-testid="order-details">
       <h2 className={`${styles.orderNumber} text text_type_digits-large mt-30`}>
-        {orderNumber}
+        {orderNumber ?? '----'}
       </h2>
 
       <p className="text text_type_main-medium mt-8">идентификатор заказа</p>

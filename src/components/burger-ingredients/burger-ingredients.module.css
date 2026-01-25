@@ -10,8 +10,8 @@
 }
 
 .ingredients_container {
-  min-height: 300px;
-  max-height: 912px;
+  position: relative;
+  height: 716px;
   overflow-y: auto;
 }
 
@@ -62,6 +62,6 @@
   }
 
   .ingredients_container {
-    max-height: 500px;
+    height: 500px;
   }
 }

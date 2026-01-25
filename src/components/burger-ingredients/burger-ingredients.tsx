@@ -1,21 +1,20 @@
-import { useIngredients } from '@/services/ingredients-context';
 import { Tab } from '@krgaa/react-developer-burger-ui-components';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
+import { useAppDispatch, useAppSelector } from '../../services/hooks';
+import { fetchIngredients } from '../../services/ingredients/thunk';
 import IngredientCard from '../ingredient-card/ingredient-card';
 
-import type { TIngredient } from '@utils/types';
+import type { TIngredient } from '../../utils/types';
+import type React from 'react';
 
 import styles from './burger-ingredients.module.css';
 
-export type BurgerIngredientsProps = {
-  onIngredientClick?: (ingredient: TIngredient) => void;
-};
+export const BurgerIngredients: React.FC = () => {
+  const dispatch = useAppDispatch();
 
-export const BurgerIngredients = ({
-  onIngredientClick,
-}: BurgerIngredientsProps): React.JSX.Element => {
-  const { ingredients, loading, error } = useIngredients();
+  const { ingredients, isLoading, error } = useAppSelector((state) => state.ingredients);
+
   const [currentTab, setCurrentTab] = useState<'bun' | 'sauce' | 'main'>('bun');
 
   const bunRef = useRef<HTMLDivElement>(null);
@@ -23,12 +22,13 @@ export const BurgerIngredients = ({
   const mainRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const buns: TIngredient[] =
-    ingredients?.filter((item: TIngredient) => item.type === 'bun') ?? [];
-  const sauces: TIngredient[] =
-    ingredients?.filter((item: TIngredient) => item.type === 'sauce') ?? [];
-  const mains: TIngredient[] =
-    ingredients?.filter((item: TIngredient) => item.type === 'main') ?? [];
+  const buns: TIngredient[] = ingredients.filter((item) => item.type === 'bun');
+  const sauces: TIngredient[] = ingredients.filter((item) => item.type === 'sauce');
+  const mains: TIngredient[] = ingredients.filter((item) => item.type === 'main');
+
+  useEffect(() => {
+    void dispatch(fetchIngredients());
+  }, [dispatch]);
 
   const handleTabClick = (value: string): void => {
     const tabValue = value as 'bun' | 'sauce' | 'main';
@@ -49,34 +49,61 @@ export const BurgerIngredients = ({
     }
   };
 
-  useEffect(() => {
+  const handleScroll = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const handleScroll = (): void => {
-      const containerTop = container.getBoundingClientRect().top;
-      const bunTop = bunRef.current?.getBoundingClientRect().top ?? 0;
-      const sauceTop = sauceRef.current?.getBoundingClientRect().top ?? 0;
-      const mainTop = mainRef.current?.getBoundingClientRect().top ?? 0;
+    const scrollTop = container.scrollTop;
 
-      const distances = {
-        bun: Math.abs(bunTop - containerTop),
-        sauce: Math.abs(sauceTop - containerTop),
-        main: Math.abs(mainTop - containerTop),
-      };
+    const sauceTop = sauceRef.current?.offsetTop ?? 0;
+    const mainTop = mainRef.current?.offsetTop ?? 0;
 
-      const closest = Object.entries(distances).reduce((prev, curr) =>
-        curr[1] < prev[1] ? curr : prev
-      );
+    let activeTab: 'bun' | 'sauce' | 'main' = 'bun';
 
-      setCurrentTab(closest[0] as 'bun' | 'sauce' | 'main');
+    const threshold = 50;
+
+    if (scrollTop < sauceTop - threshold) {
+      activeTab = 'bun';
+    } else if (scrollTop < mainTop - threshold) {
+      activeTab = 'sauce';
+    } else {
+      activeTab = 'main';
+    }
+
+    if (scrollTop <= threshold) {
+      activeTab = 'bun';
+    }
+
+    if (activeTab !== currentTab) {
+      setCurrentTab(activeTab);
+    }
+  }, [currentTab]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || isLoading || error || ingredients.length === 0) return;
+
+    let ticking = false;
+    const throttledHandleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return (): void => container.removeEventListener('scroll', handleScroll);
-  }, []);
+    container.addEventListener('scroll', throttledHandleScroll);
 
-  if (loading) {
+    handleScroll();
+
+    return () => {
+      container.removeEventListener('scroll', throttledHandleScroll);
+    };
+  }, [handleScroll, isLoading, error, ingredients.length]);
+
+  if (isLoading) {
     return (
       <section className={styles.burger_ingredients}>
         <div className="text text_type_main-default">Загрузка ингредиентов...</div>
@@ -88,7 +115,7 @@ export const BurgerIngredients = ({
     return (
       <section className={styles.burger_ingredients}>
         <div className="text text_type_main-default" style={{ color: '#E52B1A' }}>
-          Ошибка при загрузке ингредиентов: {error}
+          Ошибка при загрузке ингредиентов
         </div>
       </section>
     );
@@ -106,6 +133,8 @@ export const BurgerIngredients = ({
 
   return (
     <section className={styles.burger_ingredients}>
+      <h1 className={`text text_type_main-large mt-10 mb-5`}>Соберите бургер</h1>
+
       <nav className={styles.tabs_navigation}>
         <Tab value="bun" active={currentTab === 'bun'} onClick={handleTabClick}>
           Булки
@@ -123,11 +152,7 @@ export const BurgerIngredients = ({
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Булки</h2>
           <div className={styles.ingredients_grid}>
             {buns.map((ingredient: TIngredient) => (
-              <IngredientCard
-                key={ingredient._id}
-                ingredient={ingredient}
-                onClick={() => onIngredientClick?.(ingredient)}
-              />
+              <IngredientCard key={ingredient._id} ingredient={ingredient} />
             ))}
           </div>
         </section>
@@ -136,11 +161,7 @@ export const BurgerIngredients = ({
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Соусы</h2>
           <div className={styles.ingredients_grid}>
             {sauces.map((ingredient: TIngredient) => (
-              <IngredientCard
-                key={ingredient._id}
-                ingredient={ingredient}
-                onClick={() => onIngredientClick?.(ingredient)}
-              />
+              <IngredientCard key={ingredient._id} ingredient={ingredient} />
             ))}
           </div>
         </section>
@@ -151,11 +172,7 @@ export const BurgerIngredients = ({
           </h2>
           <div className={styles.ingredients_grid}>
             {mains.map((ingredient: TIngredient) => (
-              <IngredientCard
-                key={ingredient._id}
-                ingredient={ingredient}
-                onClick={() => onIngredientClick?.(ingredient)}
-              />
+              <IngredientCard key={ingredient._id} ingredient={ingredient} />
             ))}
           </div>
         </section>

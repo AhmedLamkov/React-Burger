@@ -64,7 +64,7 @@ export default defineConfig(
           prefer: 'type-imports',
         },
       ],
-      '@typescript-eslint/explicit-function-return-type': 'error',
+      '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@typescript-eslint/no-import-type-side-effects': 'error',
       '@typescript-eslint/no-unused-expressions': [

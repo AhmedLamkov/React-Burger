@@ -1,27 +1,47 @@
 .ingredient_card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  text-align: center;
   cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.ingredient_card:hover {
+  transform: translateY(-2px);
+}
+
+.link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.image {
+  width: 240px;
+  height: 120px;
+  object-fit: contain;
 }
 
 .ingredient_price {
   display: flex;
   align-items: center;
-  column-gap: 8px;
+  gap: 8px;
+  margin: 8px 0;
 }
 
 .ingredient_name {
-  font-size: 16px;
-  line-height: 24px;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  text-align: center;
 }
 
-.icon {
-  width: 24px;
-  height: 24px;
-  background: url('../../../public/currency.svg');
-  background-repeat: no-repeat;
-  background-size: contain;
+.counter {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.dragging {
+  opacity: 0.5;
 }
