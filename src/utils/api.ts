@@ -222,11 +222,14 @@ export const api = {
   },
 
   forgotPassword: async (email: string): Promise<IForgotPasswordResponse> => {
-    return fetchWithCheck<IForgotPasswordResponse>('/password-reset', {
+    console.log('Forgot password request for:', email);
+    const response = await fetchWithCheck<IForgotPasswordResponse>('/password-reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
+    console.log('Forgot password response:', response);
+    return response;
   },
 
   resetPassword: async (

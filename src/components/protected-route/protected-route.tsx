@@ -43,7 +43,7 @@ const ProtectedRoute = ({
   }
 
   if (onlyUnAuth && isAuthenticated) {
-    const from = state?.from?.pathname ?? '/';
+    const from = state?.from ?? { pathname: '/' };
     return <Navigate to={from} replace />;
   }
 

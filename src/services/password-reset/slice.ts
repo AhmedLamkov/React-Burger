@@ -13,14 +13,14 @@ type PasswordResetState = {
   isLoading: boolean;
   error: string | null;
   isEmailSent: boolean;
-  isResetSuccess: boolean;
+  isPasswordReset: boolean;
 };
 
 const initialState: PasswordResetState = {
   isLoading: false,
   error: null,
   isEmailSent: false,
-  isResetSuccess: false,
+  isPasswordReset: false,
 };
 
 const passwordResetSlice = createSlice({
@@ -28,8 +28,10 @@ const passwordResetSlice = createSlice({
   initialState,
   reducers: {
     resetPasswordResetState: (state) => {
+      state.isLoading = false;
+      state.error = null;
       state.isEmailSent = false;
-      state.isResetSuccess = false;
+      state.isPasswordReset = false;
     },
   },
   extraReducers: (builder) => {
@@ -37,6 +39,7 @@ const passwordResetSlice = createSlice({
       .addCase(forgotPasswordRequest, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.isEmailSent = false;
       })
       .addCase(forgotPasswordSuccess, (state) => {
         state.isLoading = false;
@@ -46,19 +49,22 @@ const passwordResetSlice = createSlice({
       .addCase(forgotPasswordFailed, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.isEmailSent = false;
       })
       .addCase(resetPasswordRequest, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.isPasswordReset = false;
       })
       .addCase(resetPasswordSuccess, (state) => {
         state.isLoading = false;
-        state.isResetSuccess = true;
+        state.isPasswordReset = true;
         state.error = null;
       })
       .addCase(resetPasswordFailed, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.isPasswordReset = false;
       });
   },
 });

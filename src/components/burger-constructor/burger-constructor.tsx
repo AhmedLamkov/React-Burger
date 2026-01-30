@@ -6,6 +6,7 @@ import {
 } from '@krgaa/react-developer-burger-ui-components';
 import { useMemo, useCallback, useRef } from 'react';
 import { useDrop } from 'react-dnd';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import {
   addIngredient,
@@ -27,10 +28,13 @@ import styles from './burger-constructor.module.css';
 
 const BurgerConstructor: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const ref = useRef<HTMLDivElement>(null);
 
   const { bun, ingredients } = useAppSelector((state) => state.burgerConstructor);
   const { isLoading } = useAppSelector((state) => state.order);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const [{ isHover }, drop] = useDrop({
     accept: 'ingredient',
@@ -72,6 +76,11 @@ const BurgerConstructor: React.FC = () => {
   );
 
   const handleCreateOrder = (): void => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+
     if (!bun) {
       alert('Пожалуйста, добавьте булку!');
       return;

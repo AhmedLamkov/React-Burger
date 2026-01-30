@@ -1,10 +1,10 @@
 import { Button, Input } from '@krgaa/react-developer-burger-ui-components';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
-import { forgotPasswordRequest } from '../../services/auth/actions';
 import { useAppDispatch, useAppSelector } from '../../services/hooks';
 import { resetPasswordResetState } from '../../services/password-reset/slice';
+import { forgotPassword } from '../../services/password-reset/thunk';
 
 import type { FormEvent } from 'react';
 
@@ -16,16 +16,27 @@ const ForgotPasswordPage = (): React.JSX.Element => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const hasRedirected = useRef(false);
+
   const { isLoading, error, isEmailSent } = useAppSelector(
     (state) => state.passwordReset
   );
+
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
+    console.log('ForgotPasswordPage mounted');
+
     if (isAuthenticated) {
       navigate('/', { replace: true });
     }
-    void dispatch(resetPasswordResetState());
+
+    dispatch(resetPasswordResetState());
+    hasRedirected.current = false;
+
+    return () => {
+      hasRedirected.current = false;
+    };
   }, [dispatch, isAuthenticated, navigate]);
 
   useEffect(() => {
@@ -34,18 +45,43 @@ const ForgotPasswordPage = (): React.JSX.Element => {
   }, [email]);
 
   useEffect(() => {
-    if (isEmailSent) {
+    console.log('isEmailSent changed:', isEmailSent);
+
+    if (isEmailSent && !hasRedirected.current) {
+      console.log('Redirecting to /reset-password');
+      hasRedirected.current = true;
+
+      const testToken = generateTestToken(email);
+      console.log('Generated test token:', testToken);
+
       navigate('/reset-password', {
-        state: { from: location },
+        state: {
+          from: location.pathname,
+          testToken: testToken,
+        },
         replace: true,
       });
     }
-  }, [isEmailSent, navigate, location]);
+  }, [isEmailSent, navigate, location.pathname, email]);
+
+  const generateTestToken = (userEmail: string): string => {
+    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const payload = btoa(
+      JSON.stringify({
+        email: userEmail,
+        iat: Date.now(),
+        exp: Date.now() + 3600000,
+      })
+    );
+    const signature = 'test-signature-' + Date.now();
+
+    return `${header}.${payload}.${signature}`;
+  };
 
   const handleSubmit = (e: FormEvent): void => {
     e.preventDefault();
     if (isValid) {
-      void dispatch(forgotPasswordRequest(email));
+      void dispatch(forgotPassword(email));
     }
   };
 

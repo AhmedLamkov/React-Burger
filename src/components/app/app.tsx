@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { AppHeader } from '@components/app-header/app-header';
 import BurgerConstructor from '@components/burger-constructor/burger-constructor';
@@ -26,6 +26,7 @@ import Modal from '../modal/modal';
 import OrderDetails from '../order-details/order-details';
 import ProtectedRoute from '../protected-route/protected-route';
 
+import type { TIngredient } from '../../utils/types';
 import type { Location } from 'react-router-dom';
 
 import styles from './app.module.css';
@@ -38,14 +39,16 @@ export const App = (): React.JSX.Element => {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    isOpen: isModalOpen,
-    modalType,
-    modalData,
-  } = useAppSelector((state) => state.modal);
+  const { id: ingredientId } = useParams();
+
+  const { modalType, modalData } = useAppSelector((state) => state.modal);
+
   const currentIngredient = useAppSelector(
     (state) => state.ingredientDetails.ingredient
   );
+
+  const allIngredients = useAppSelector((state) => state.ingredients.items);
+
   const {
     number: orderNumber,
     isLoading: isOrderLoading,
@@ -65,14 +68,14 @@ export const App = (): React.JSX.Element => {
         const data = await api.getUser();
         if (data.success && data.user) {
           dispatch(getUserSuccess({ user: data.user }));
+        } else {
+          dispatch(
+            getUserFailed(data.message ?? 'Ошибка при получении данных пользователя')
+          );
         }
       } catch (error) {
-        if (error instanceof Error) {
-          console.error('Ошибка при проверке авторизации:', error.message);
-        }
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        dispatch(getUserFailed('Ошибка авторизации'));
+        console.error('Ошибка при проверке авторизации:', error);
+        dispatch(getUserFailed('Ошибка сервера при проверке авторизации'));
       } finally {
         dispatch(setAuthChecked(true));
       }
@@ -96,9 +99,11 @@ export const App = (): React.JSX.Element => {
     }
   };
 
-  const renderModalContent = (): React.ReactNode => {
-    console.log('Rendering modal content:', { modalType, modalData });
+  const handleCloseIngredientModal = (): void => {
+    navigate(-1);
+  };
 
+  const renderModalContent = (): React.ReactNode => {
     let orderData = null;
 
     switch (modalType) {
@@ -110,7 +115,6 @@ export const App = (): React.JSX.Element => {
         );
       case 'orderDetails':
         orderData = modalData as { number?: number; name?: string } | null;
-        console.log('Order data:', orderData);
         return (
           <OrderDetails
             orderNumber={orderNumber ?? orderData?.number ?? undefined}
@@ -123,8 +127,17 @@ export const App = (): React.JSX.Element => {
     }
   };
 
+  const getIngredientFromUrl = (): TIngredient | undefined => {
+    if (!ingredientId) return undefined;
+    return allIngredients.find(
+      (ingredient: TIngredient) => ingredient._id === ingredientId
+    );
+  };
+
   const locationState = location.state as LocationState | undefined;
   const background = locationState?.background;
+
+  const isIngredientPage = location.pathname.startsWith('/ingredients/');
 
   return (
     <div className={styles.app}>
@@ -133,12 +146,10 @@ export const App = (): React.JSX.Element => {
         <Route
           path="/"
           element={
-            <>
-              <main className={`${styles.main} pl-5 pr-5`}>
-                <BurgerIngredients />
-                <BurgerConstructor />
-              </main>
-            </>
+            <main className={`${styles.main} pl-5 pr-5`}>
+              <BurgerIngredients />
+              <BurgerConstructor />
+            </main>
           }
         />
         <Route
@@ -193,21 +204,27 @@ export const App = (): React.JSX.Element => {
         />
       </Routes>
 
-      {background && isModalOpen && modalType === 'ingredientDetails' && (
+      {background && (
         <Routes>
           <Route
             path="/ingredients/:id"
             element={
               <Modal title="Детали ингредиента" onClose={handleCloseModal}>
-                {renderModalContent()}
+                <IngredientDetails />
               </Modal>
             }
           />
         </Routes>
       )}
 
-      {!background && isModalOpen && modalType === 'orderDetails' && (
+      {modalType === 'orderDetails' && (
         <Modal onClose={handleCloseModal}>{renderModalContent()}</Modal>
+      )}
+
+      {!background && isIngredientPage && (
+        <Modal title="Детали ингредиента" onClose={handleCloseIngredientModal}>
+          <IngredientDetails ingredient={getIngredientFromUrl()} />
+        </Modal>
       )}
     </div>
   );

@@ -14,9 +14,7 @@ import type { FormEvent } from 'react';
 import styles from './login-page.module.css';
 
 type LocationState = {
-  from?: {
-    pathname: string;
-  };
+  from?: string | { pathname: string };
 };
 
 const LoginPage = (): React.JSX.Element => {
@@ -28,10 +26,26 @@ const LoginPage = (): React.JSX.Element => {
   const location = useLocation();
   const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
   const state = location.state as LocationState | null;
-  const from = state?.from?.pathname ?? '/';
+
+  const getFromPath = (): string => {
+    if (!state?.from) return '/';
+
+    if (typeof state.from === 'string') {
+      return state.from;
+    }
+
+    if (typeof state.from === 'object' && state.from.pathname) {
+      return state.from.pathname;
+    }
+
+    return '/';
+  };
+
+  const from = getFromPath();
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('Login successful, redirecting to:', from);
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, from]);

@@ -17,15 +17,10 @@ import {
   updateUserSuccess,
   updateUserFailed,
   setAuthChecked,
-  forgotPasswordRequest,
-  forgotPasswordSuccess,
-  forgotPasswordFailed,
-  resetPasswordRequest,
-  resetPasswordSuccess,
-  resetPasswordFailed,
 } from './actions';
 
 type AuthState = {
+  user: { email: string; name: string } | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -34,13 +29,17 @@ type AuthState = {
   refreshToken: string | null;
 };
 
+const accessToken = localStorage.getItem('accessToken');
+const refreshToken = localStorage.getItem('refreshToken');
+
 const initialState: AuthState = {
-  isAuthenticated: false,
+  user: null,
+  isAuthenticated: !!accessToken, // Устанавливаем true если токен есть
   isLoading: false,
   error: null,
   isAuthChecked: false,
-  accessToken: localStorage.getItem('accessToken'),
-  refreshToken: localStorage.getItem('refreshToken'),
+  accessToken: accessToken,
+  refreshToken: refreshToken,
 };
 
 const authSlice = createSlice({
@@ -56,9 +55,12 @@ const authSlice = createSlice({
       .addCase(registerSuccess, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.accessToken = action.payload.accessToken.replace('Bearer ', '');
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.error = null;
+        localStorage.setItem('accessToken', action.payload.accessToken);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
       .addCase(registerFailed, (state, action) => {
         state.isLoading = false;
@@ -71,9 +73,12 @@ const authSlice = createSlice({
       .addCase(loginSuccess, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.accessToken = action.payload.accessToken.replace('Bearer ', '');
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.error = null;
+        localStorage.setItem('accessToken', action.payload.accessToken);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
       .addCase(loginFailed, (state, action) => {
         state.isLoading = false;
@@ -86,9 +91,12 @@ const authSlice = createSlice({
       .addCase(logoutSuccess, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
+        state.user = null;
         state.accessToken = null;
         state.refreshToken = null;
         state.error = null;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       })
       .addCase(logoutFailed, (state, action) => {
         state.isLoading = false;
@@ -98,49 +106,32 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(getUserSuccess, (state) => {
+      .addCase(getUserSuccess, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
+        state.user = action.payload.user;
         state.error = null;
       })
       .addCase(getUserFailed, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.error = action.payload;
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.error = action.payload; // Используем переданное сообщение об ошибке
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       })
       .addCase(updateUserRequest, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(updateUserSuccess, (state) => {
+      .addCase(updateUserSuccess, (state, action) => {
         state.isLoading = false;
+        state.user = action.payload.user;
         state.error = null;
       })
       .addCase(updateUserFailed, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
-      .addCase(forgotPasswordRequest, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(forgotPasswordSuccess, (state) => {
-        state.isLoading = false;
-        state.error = null;
-      })
-      .addCase(forgotPasswordFailed, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      })
-      .addCase(resetPasswordRequest, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(resetPasswordSuccess, (state) => {
-        state.isLoading = false;
-        state.error = null;
-      })
-      .addCase(resetPasswordFailed, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })

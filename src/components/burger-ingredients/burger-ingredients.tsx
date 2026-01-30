@@ -14,7 +14,7 @@ import styles from './burger-ingredients.module.css';
 export const BurgerIngredients: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const location = useLocation(); // ДОБАВЬ ЭТО
+  const location = useLocation();
 
   const { ingredients, isLoading, error } = useAppSelector((state) => state.ingredients);
 
