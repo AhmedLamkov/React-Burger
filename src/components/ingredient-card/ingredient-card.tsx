@@ -14,6 +14,7 @@ import styles from './ingredient-card.module.css';
 
 type IngredientCardProps = {
   ingredient: TIngredient;
+  onClick?: () => void;
 };
 
 const IngredientCard: React.FC<IngredientCardProps> = ({ ingredient }) => {

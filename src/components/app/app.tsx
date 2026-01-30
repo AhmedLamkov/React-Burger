@@ -26,13 +26,23 @@ import Modal from '../modal/modal';
 import OrderDetails from '../order-details/order-details';
 import ProtectedRoute from '../protected-route/protected-route';
 
+import type { Location } from 'react-router-dom';
+
 import styles from './app.module.css';
+
+type LocationState = {
+  background?: Location;
+};
 
 export const App = (): React.JSX.Element => {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOpen: isModalOpen, modalType } = useAppSelector((state) => state.modal);
+  const {
+    isOpen: isModalOpen,
+    modalType,
+    modalData,
+  } = useAppSelector((state) => state.modal);
   const currentIngredient = useAppSelector(
     (state) => state.ingredientDetails.ingredient
   );
@@ -75,12 +85,22 @@ export const App = (): React.JSX.Element => {
     void dispatch(closeModal());
     if (modalType === 'ingredientDetails') void dispatch(clearIngredientDetails());
     if (modalType === 'orderDetails') void dispatch(clearOrder());
-    const background = (location.state as { background?: Location })?.background;
-    if (background) void navigate(background);
-    else navigate(-1);
+
+    const locationState = location.state as LocationState | undefined;
+    const background = locationState?.background;
+
+    if (background) {
+      navigate(background.pathname, { replace: true });
+    } else {
+      navigate(-1);
+    }
   };
 
   const renderModalContent = (): React.ReactNode => {
+    console.log('Rendering modal content:', { modalType, modalData });
+
+    let orderData = null;
+
     switch (modalType) {
       case 'ingredientDetails':
         return currentIngredient ? (
@@ -89,9 +109,11 @@ export const App = (): React.JSX.Element => {
           <div className="text text_type_main-default">Ингредиент не найден</div>
         );
       case 'orderDetails':
+        orderData = modalData as { number?: number; name?: string } | null;
+        console.log('Order data:', orderData);
         return (
           <OrderDetails
-            orderNumber={orderNumber ?? undefined}
+            orderNumber={orderNumber ?? orderData?.number ?? undefined}
             isLoading={isOrderLoading}
             error={orderError ?? undefined}
           />
@@ -101,7 +123,8 @@ export const App = (): React.JSX.Element => {
     }
   };
 
-  const background = (location.state as { background?: Location })?.background;
+  const locationState = location.state as LocationState | undefined;
+  const background = locationState?.background;
 
   return (
     <div className={styles.app}>
@@ -169,7 +192,8 @@ export const App = (): React.JSX.Element => {
           }
         />
       </Routes>
-      {background && isModalOpen && (
+
+      {background && isModalOpen && modalType === 'ingredientDetails' && (
         <Routes>
           <Route
             path="/ingredients/:id"
@@ -181,13 +205,9 @@ export const App = (): React.JSX.Element => {
           />
         </Routes>
       )}
-      {!background && isModalOpen && (
-        <Modal
-          title={modalType === 'ingredientDetails' ? 'Детали ингредиента' : ''}
-          onClose={handleCloseModal}
-        >
-          {renderModalContent()}
-        </Modal>
+
+      {!background && isModalOpen && modalType === 'orderDetails' && (
+        <Modal onClose={handleCloseModal}>{renderModalContent()}</Modal>
       )}
     </div>
   );

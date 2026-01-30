@@ -4,6 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../services/hooks';
 
 import type { ReactNode } from 'react';
+import type { Location } from 'react-router-dom';
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -11,9 +12,7 @@ type ProtectedRouteProps = {
 };
 
 type LocationState = {
-  from?: {
-    pathname: string;
-  };
+  from?: Location;
 };
 
 const ProtectedRoute = ({
@@ -24,25 +23,27 @@ const ProtectedRoute = ({
   const location = useLocation();
 
   const state = location.state as LocationState | undefined;
-  const from = state?.from?.pathname ?? '/';
 
   useEffect(() => {
-    console.log('ProtectedRoute debug:', {
+    console.log('ProtectedRoute:', {
       isAuthenticated,
       isAuthChecked,
       onlyUnAuth,
-      from,
+      from: state?.from,
       currentPath: location.pathname,
     });
-  }, [isAuthenticated, isAuthChecked, onlyUnAuth, from, location.pathname]);
+  }, [isAuthenticated, isAuthChecked, onlyUnAuth, state, location.pathname]);
 
   if (!isAuthChecked) {
     return (
-      <div className="text text_type_main-default mt-20 text-center">Загрузка...</div>
+      <div className="text text_type_main-default mt-20 text-center">
+        Проверка авторизации...
+      </div>
     );
   }
 
   if (onlyUnAuth && isAuthenticated) {
+    const from = state?.from?.pathname ?? '/';
     return <Navigate to={from} replace />;
   }
 
