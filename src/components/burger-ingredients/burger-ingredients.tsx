@@ -2,8 +2,7 @@ import { Tab } from '@krgaa/react-developer-burger-ui-components';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-import { useAppDispatch, useAppSelector } from '../../services/hooks';
-import { fetchIngredients } from '../../services/ingredients/thunk';
+import { useAppSelector } from '../../services/hooks';
 import IngredientCard from '../ingredient-card/ingredient-card';
 
 import type { TIngredient } from '../../utils/types';
@@ -12,7 +11,6 @@ import type React from 'react';
 import styles from './burger-ingredients.module.css';
 
 export const BurgerIngredients: React.FC = () => {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,10 +26,6 @@ export const BurgerIngredients: React.FC = () => {
   const buns: TIngredient[] = ingredients.filter((item) => item.type === 'bun');
   const sauces: TIngredient[] = ingredients.filter((item) => item.type === 'sauce');
   const mains: TIngredient[] = ingredients.filter((item) => item.type === 'main');
-
-  useEffect(() => {
-    void dispatch(fetchIngredients());
-  }, [dispatch]);
 
   const handleIngredientClick = useCallback(
     (ingredient: TIngredient) => {

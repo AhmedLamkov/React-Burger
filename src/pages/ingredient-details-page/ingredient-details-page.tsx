@@ -1,10 +1,7 @@
-import { useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 
 import IngredientDetails from '../../components/ingredient-details/ingredient-details';
-import { useAppDispatch, useAppSelector } from '../../services/hooks';
-import { setIngredientDetails } from '../../services/ingredient-details/actions';
-import { api } from '../../utils/api';
+import { useAppSelector } from '../../services/hooks';
 
 import type { Location } from 'react-router-dom';
 
@@ -14,38 +11,29 @@ type LocationState = {
   background?: Location;
 };
 
-const IngredientDetailsPage = (): React.JSX.Element => {
+const IngredientDetailsPage = (): React.JSX.Element | null => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const dispatch = useAppDispatch();
-  const ingredient = useAppSelector((state) => state.ingredientDetails.ingredient);
 
-  useEffect(() => {
-    const fetchIngredient = async (): Promise<void> => {
-      if (!id) return;
-
-      if (!ingredient || ingredient._id !== id) {
-        try {
-          const data = await api.getIngredients();
-          const foundIngredient = data.find((item) => item._id === id);
-          if (foundIngredient) {
-            dispatch(setIngredientDetails(foundIngredient));
-          }
-        } catch (error) {
-          console.error('Ошибка загрузки ингредиента:', error);
-        }
-      }
-    };
-
-    void fetchIngredient();
-  }, [id, ingredient, dispatch]);
+  const allIngredients = useAppSelector((state) => state.ingredients.items);
+  const isLoading = useAppSelector((state) => state.ingredients.isLoading);
 
   const locationState = location.state as LocationState | undefined;
   const hasBackground = !!locationState?.background;
 
   if (hasBackground) {
-    return <></>;
+    return null;
   }
+
+  if (isLoading) {
+    return (
+      <div className="mt-30">
+        <p className="text text_type_main-default text-center">Загрузка...</p>
+      </div>
+    );
+  }
+
+  const ingredient = id ? allIngredients.find((item) => item._id === id) : null;
 
   return (
     <div className="mt-30">

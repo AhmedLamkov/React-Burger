@@ -18,6 +18,7 @@ import {
 } from '../../services/auth/actions';
 import { useAppDispatch, useAppSelector } from '../../services/hooks';
 import { clearIngredientDetails } from '../../services/ingredient-details/actions';
+import { fetchIngredients } from '../../services/ingredients/thunk';
 import { closeModal } from '../../services/modal/actions';
 import { clearOrder } from '../../services/order/actions';
 import { api } from '../../utils/api';
@@ -48,7 +49,7 @@ export const App = (): React.JSX.Element => {
   );
 
   const allIngredients = useAppSelector((state) => state.ingredients.items);
-
+  const { items: ingredients, isLoading } = useAppSelector((state) => state.ingredients);
   const {
     number: orderNumber,
     isLoading: isOrderLoading,
@@ -56,6 +57,10 @@ export const App = (): React.JSX.Element => {
   } = useAppSelector((state) => state.order);
 
   useEffect(() => {
+    if (ingredients.length === 0 && !isLoading) {
+      void dispatch(fetchIngredients());
+    }
+
     const checkUserAuth = async (): Promise<void> => {
       const accessToken = localStorage.getItem('accessToken');
 
@@ -82,7 +87,7 @@ export const App = (): React.JSX.Element => {
     };
 
     void checkUserAuth();
-  }, [dispatch]);
+  }, [dispatch, ingredients.length, isLoading]);
 
   const handleCloseModal = (): void => {
     void dispatch(closeModal());
@@ -94,36 +99,13 @@ export const App = (): React.JSX.Element => {
 
     if (background) {
       navigate(background.pathname, { replace: true });
+    } else if (
+      modalType === 'ingredientDetails' &&
+      location.pathname.startsWith('/ingredients/')
+    ) {
+      navigate('/', { replace: true });
     } else {
       navigate(-1);
-    }
-  };
-
-  const handleCloseIngredientModal = (): void => {
-    navigate(-1);
-  };
-
-  const renderModalContent = (): React.ReactNode => {
-    let orderData = null;
-
-    switch (modalType) {
-      case 'ingredientDetails':
-        return currentIngredient ? (
-          <IngredientDetails ingredient={currentIngredient} />
-        ) : (
-          <div className="text text_type_main-default">Ингредиент не найден</div>
-        );
-      case 'orderDetails':
-        orderData = modalData as { number?: number; name?: string } | null;
-        return (
-          <OrderDetails
-            orderNumber={orderNumber ?? orderData?.number ?? undefined}
-            isLoading={isOrderLoading}
-            error={orderError ?? undefined}
-          />
-        );
-      default:
-        return null;
     }
   };
 
@@ -134,10 +116,33 @@ export const App = (): React.JSX.Element => {
     );
   };
 
+  const renderModalContent = (): React.ReactNode => {
+    switch (modalType) {
+      case 'ingredientDetails': {
+        const ingredient = getIngredientFromUrl() ?? currentIngredient;
+        return ingredient ? (
+          <IngredientDetails ingredient={ingredient} />
+        ) : (
+          <div className="text text_type_main-default">Ингредиент не найден</div>
+        );
+      }
+      case 'orderDetails': {
+        const orderData = modalData as { number?: number; name?: string } | null;
+        return (
+          <OrderDetails
+            orderNumber={orderNumber ?? orderData?.number ?? undefined}
+            isLoading={isOrderLoading}
+            error={orderError ?? undefined}
+          />
+        );
+      }
+      default:
+        return null;
+    }
+  };
+
   const locationState = location.state as LocationState | undefined;
   const background = locationState?.background;
-
-  const isIngredientPage = location.pathname.startsWith('/ingredients/');
 
   return (
     <div className={styles.app}>
@@ -204,26 +209,12 @@ export const App = (): React.JSX.Element => {
         />
       </Routes>
 
-      {background && (
-        <Routes>
-          <Route
-            path="/ingredients/:id"
-            element={
-              <Modal title="Детали ингредиента" onClose={handleCloseModal}>
-                <IngredientDetails />
-              </Modal>
-            }
-          />
-        </Routes>
-      )}
-
-      {modalType === 'orderDetails' && (
-        <Modal onClose={handleCloseModal}>{renderModalContent()}</Modal>
-      )}
-
-      {!background && isIngredientPage && (
-        <Modal title="Детали ингредиента" onClose={handleCloseIngredientModal}>
-          <IngredientDetails ingredient={getIngredientFromUrl()} />
+      {(modalType === 'ingredientDetails' || modalType === 'orderDetails') && (
+        <Modal
+          title={modalType === 'ingredientDetails' ? 'Детали ингредиента' : undefined}
+          onClose={handleCloseModal}
+        >
+          {renderModalContent()}
         </Modal>
       )}
     </div>
