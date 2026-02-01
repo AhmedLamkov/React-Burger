@@ -17,7 +17,6 @@ import {
   getUserFailed,
 } from '../../services/auth/actions';
 import { useAppDispatch, useAppSelector } from '../../services/hooks';
-import { clearIngredientDetails } from '../../services/ingredient-details/actions';
 import { fetchIngredients } from '../../services/ingredients/thunk';
 import { closeModal } from '../../services/modal/actions';
 import { clearOrder } from '../../services/order/actions';
@@ -36,19 +35,48 @@ type LocationState = {
   background?: Location;
 };
 
+const IngredientModal = () => {
+  const { id } = useParams();
+  const allIngredients = useAppSelector((state) => state.ingredients.items);
+  const isLoading = useAppSelector((state) => state.ingredients.isLoading);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleCloseModal = (): void => {
+    const locationState = location.state as LocationState | undefined;
+    const background = locationState?.background;
+
+    if (background) {
+      navigate(background.pathname, { replace: true });
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const ingredient = id
+    ? allIngredients.find((item: TIngredient) => item._id === id)
+    : null;
+
+  return (
+    <Modal title="Детали ингредиента" onClose={handleCloseModal}>
+      {isLoading ? (
+        <div className="text text_type_main-default">Загрузка...</div>
+      ) : ingredient ? (
+        <IngredientDetails ingredient={ingredient} />
+      ) : (
+        <div className="text text_type_main-default">Ингредиент не найден</div>
+      )}
+    </Modal>
+  );
+};
+
 export const App = (): React.JSX.Element => {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const { id: ingredientId } = useParams();
 
-  const { modalType, modalData } = useAppSelector((state) => state.modal);
+  const { modalType } = useAppSelector((state) => state.modal);
 
-  const currentIngredient = useAppSelector(
-    (state) => state.ingredientDetails.ingredient
-  );
-
-  const allIngredients = useAppSelector((state) => state.ingredients.items);
   const { items: ingredients, isLoading } = useAppSelector((state) => state.ingredients);
   const {
     number: orderNumber,
@@ -89,56 +117,10 @@ export const App = (): React.JSX.Element => {
     void checkUserAuth();
   }, [dispatch, ingredients.length, isLoading]);
 
-  const handleCloseModal = (): void => {
+  const handleCloseOrderModal = (): void => {
     void dispatch(closeModal());
-    if (modalType === 'ingredientDetails') void dispatch(clearIngredientDetails());
-    if (modalType === 'orderDetails') void dispatch(clearOrder());
-
-    const locationState = location.state as LocationState | undefined;
-    const background = locationState?.background;
-
-    if (background) {
-      navigate(background.pathname, { replace: true });
-    } else if (
-      modalType === 'ingredientDetails' &&
-      location.pathname.startsWith('/ingredients/')
-    ) {
-      navigate('/', { replace: true });
-    } else {
-      navigate(-1);
-    }
-  };
-
-  const getIngredientFromUrl = (): TIngredient | undefined => {
-    if (!ingredientId) return undefined;
-    return allIngredients.find(
-      (ingredient: TIngredient) => ingredient._id === ingredientId
-    );
-  };
-
-  const renderModalContent = (): React.ReactNode => {
-    switch (modalType) {
-      case 'ingredientDetails': {
-        const ingredient = getIngredientFromUrl() ?? currentIngredient;
-        return ingredient ? (
-          <IngredientDetails ingredient={ingredient} />
-        ) : (
-          <div className="text text_type_main-default">Ингредиент не найден</div>
-        );
-      }
-      case 'orderDetails': {
-        const orderData = modalData as { number?: number; name?: string } | null;
-        return (
-          <OrderDetails
-            orderNumber={orderNumber ?? orderData?.number ?? undefined}
-            isLoading={isOrderLoading}
-            error={orderError ?? undefined}
-          />
-        );
-      }
-      default:
-        return null;
-    }
+    void dispatch(clearOrder());
+    navigate(-1);
   };
 
   const locationState = location.state as LocationState | undefined;
@@ -209,12 +191,19 @@ export const App = (): React.JSX.Element => {
         />
       </Routes>
 
-      {(modalType === 'ingredientDetails' || modalType === 'orderDetails') && (
-        <Modal
-          title={modalType === 'ingredientDetails' ? 'Детали ингредиента' : undefined}
-          onClose={handleCloseModal}
-        >
-          {renderModalContent()}
+      {background && (
+        <Routes>
+          <Route path="/ingredients/:id" element={<IngredientModal />} />
+        </Routes>
+      )}
+
+      {modalType === 'orderDetails' && (
+        <Modal onClose={handleCloseOrderModal}>
+          <OrderDetails
+            orderNumber={orderNumber ?? undefined}
+            isLoading={isOrderLoading}
+            error={orderError ?? undefined}
+          />
         </Modal>
       )}
     </div>
