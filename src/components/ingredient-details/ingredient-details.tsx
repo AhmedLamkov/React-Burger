@@ -1,18 +1,42 @@
+import { useParams } from 'react-router-dom';
+
+import { useAppSelector } from '../../services/hooks';
+
 import type { TIngredient } from '../../utils/types';
-import type { FC } from 'react';
+import type React from 'react';
 
 import styles from './ingredient-details.module.css';
 
 type IngredientDetailsProps = {
-  ingredient: TIngredient;
+  ingredient?: TIngredient;
 };
 
-const IngredientDetails: FC<IngredientDetailsProps> = ({ ingredient }) => {
+const IngredientDetails: React.FC<IngredientDetailsProps> = ({ ingredient }) => {
+  const { id } = useParams();
+  const allIngredients = useAppSelector((state) => state.ingredients.items);
+
+  const currentIngredient =
+    ingredient ?? allIngredients.find((item: TIngredient) => item._id === id);
+
+  if (!currentIngredient) {
+    return (
+      <div className={styles.container}>
+        <div className="text text_type_main-default mt-10 mb-10">
+          Ингредиент не найден
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.container} data-testid="ingredient-details">
-      <img src={ingredient.image_large} alt={ingredient.name} className={styles.image} />
+    <div className={styles.container}>
+      <img
+        src={currentIngredient.image_large}
+        alt={currentIngredient.name}
+        className={styles.image}
+      />
       <h3 className={`${styles.name} text text_type_main-medium mt-4 mb-8`}>
-        {ingredient.name}
+        {currentIngredient.name}
       </h3>
       <div className={`${styles.nutrition} mb-15`}>
         <div className={styles.nutritionItem}>
@@ -20,7 +44,7 @@ const IngredientDetails: FC<IngredientDetailsProps> = ({ ingredient }) => {
             Калории,ккал
           </span>
           <span className="text text_type_digits-default text_color_inactive">
-            {ingredient.calories}
+            {currentIngredient.calories}
           </span>
         </div>
         <div className={styles.nutritionItem}>
@@ -28,7 +52,7 @@ const IngredientDetails: FC<IngredientDetailsProps> = ({ ingredient }) => {
             Белки, г
           </span>
           <span className="text text_type_digits-default text_color_inactive">
-            {ingredient.proteins}
+            {currentIngredient.proteins}
           </span>
         </div>
         <div className={styles.nutritionItem}>
@@ -36,7 +60,7 @@ const IngredientDetails: FC<IngredientDetailsProps> = ({ ingredient }) => {
             Жиры, г
           </span>
           <span className="text text_type_digits-default text_color_inactive">
-            {ingredient.fat}
+            {currentIngredient.fat}
           </span>
         </div>
         <div className={styles.nutritionItem}>
@@ -44,7 +68,7 @@ const IngredientDetails: FC<IngredientDetailsProps> = ({ ingredient }) => {
             Углеводы, г
           </span>
           <span className="text text_type_digits-default text_color_inactive">
-            {ingredient.carbohydrates}
+            {currentIngredient.carbohydrates}
           </span>
         </div>
       </div>

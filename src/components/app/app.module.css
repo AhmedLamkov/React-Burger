@@ -1,23 +1,26 @@
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  color: var(--text-primary-color);
-  background-color: var(--background-alt);
-}
-
-.title {
-  width: 100%;
-  max-width: 1260px;
-  margin-right: auto;
-  margin-left: auto;
+  min-height: 100vh;
+  color: #f2f2f3;
+  background-color: #131316;
 }
 
 .main {
   display: flex;
-  justify-content: space-between;
-  width: 1240px;
-  height: 100%;
+  justify-content: center;
+  gap: 40px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  overflow: hidden;
+}
+
+.notFound {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }

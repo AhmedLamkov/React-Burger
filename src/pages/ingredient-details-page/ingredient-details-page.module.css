@@ -1,0 +1,9 @@
+.title {
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
+  font-size: 36px;
+  font-family: 'Jet Brains Mono', sans-serif;
+  line-height: 1.1;
+  text-align: center;
+}

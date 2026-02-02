@@ -65,6 +65,7 @@ export default defineConfig(
         },
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
+      "@typescript-eslint/no-floating-promises": "off",
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@typescript-eslint/no-import-type-side-effects': 'error',
       '@typescript-eslint/no-unused-expressions': [

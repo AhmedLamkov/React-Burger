@@ -1,8 +1,8 @@
 import { Tab } from '@krgaa/react-developer-burger-ui-components';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-import { useAppDispatch, useAppSelector } from '../../services/hooks';
-import { fetchIngredients } from '../../services/ingredients/thunk';
+import { useAppSelector } from '../../services/hooks';
 import IngredientCard from '../ingredient-card/ingredient-card';
 
 import type { TIngredient } from '../../utils/types';
@@ -11,7 +11,8 @@ import type React from 'react';
 import styles from './burger-ingredients.module.css';
 
 export const BurgerIngredients: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { ingredients, isLoading, error } = useAppSelector((state) => state.ingredients);
 
@@ -26,9 +27,14 @@ export const BurgerIngredients: React.FC = () => {
   const sauces: TIngredient[] = ingredients.filter((item) => item.type === 'sauce');
   const mains: TIngredient[] = ingredients.filter((item) => item.type === 'main');
 
-  useEffect(() => {
-    void dispatch(fetchIngredients());
-  }, [dispatch]);
+  const handleIngredientClick = useCallback(
+    (ingredient: TIngredient) => {
+      navigate(`/ingredients/${ingredient._id}`, {
+        state: { background: location },
+      });
+    },
+    [navigate, location]
+  );
 
   const handleTabClick = (value: string): void => {
     const tabValue = value as 'bun' | 'sauce' | 'main';
@@ -152,7 +158,11 @@ export const BurgerIngredients: React.FC = () => {
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Булки</h2>
           <div className={styles.ingredients_grid}>
             {buns.map((ingredient: TIngredient) => (
-              <IngredientCard key={ingredient._id} ingredient={ingredient} />
+              <IngredientCard
+                key={ingredient._id}
+                ingredient={ingredient}
+                onClick={() => handleIngredientClick(ingredient)}
+              />
             ))}
           </div>
         </section>
@@ -161,7 +171,11 @@ export const BurgerIngredients: React.FC = () => {
           <h2 className={`text text_type_main-medium ${styles.section_title}`}>Соусы</h2>
           <div className={styles.ingredients_grid}>
             {sauces.map((ingredient: TIngredient) => (
-              <IngredientCard key={ingredient._id} ingredient={ingredient} />
+              <IngredientCard
+                key={ingredient._id}
+                ingredient={ingredient}
+                onClick={() => handleIngredientClick(ingredient)}
+              />
             ))}
           </div>
         </section>
@@ -172,7 +186,11 @@ export const BurgerIngredients: React.FC = () => {
           </h2>
           <div className={styles.ingredients_grid}>
             {mains.map((ingredient: TIngredient) => (
-              <IngredientCard key={ingredient._id} ingredient={ingredient} />
+              <IngredientCard
+                key={ingredient._id}
+                ingredient={ingredient}
+                onClick={() => handleIngredientClick(ingredient)}
+              />
             ))}
           </div>
         </section>

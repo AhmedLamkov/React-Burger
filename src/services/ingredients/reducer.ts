@@ -9,15 +9,18 @@ import {
   resetIngredientsCount,
 } from './actions';
 
-import type { IIngredient } from './actions';
+import type { IIngredientWithCount } from './actions';
+import type { TIngredient } from '@/utils/types';
 
 export type IIngredientsState = {
-  ingredients: IIngredient[];
+  items: TIngredient[];
+  ingredients: IIngredientWithCount[];
   isLoading: boolean;
   error: boolean;
 };
 
 const initialState: IIngredientsState = {
+  items: [],
   ingredients: [],
   isLoading: false,
   error: false,
@@ -31,10 +34,11 @@ export const ingredientsReducer = createReducer(initialState, (builder) => {
     })
     .addCase(getIngredientsSuccess, (state, action) => {
       state.isLoading = false;
+      state.items = action.payload;
       state.ingredients = action.payload.map((ingredient) => ({
         ...ingredient,
         count: 0,
-      }));
+      })) as IIngredientWithCount[];
     })
     .addCase(getIngredientsFailed, (state) => {
       state.isLoading = false;
@@ -44,13 +48,13 @@ export const ingredientsReducer = createReducer(initialState, (builder) => {
       const id = action.payload;
       const ingredient = state.ingredients.find((item) => item._id === id);
       if (ingredient) {
-        ingredient.count = (ingredient.count ?? 0) + 1;
+        ingredient.count += 1;
       }
     })
     .addCase(decrementIngredientCount, (state, action) => {
       const id = action.payload;
       const ingredient = state.ingredients.find((item) => item._id === id);
-      if (ingredient?.count && ingredient.count > 0) {
+      if (ingredient && ingredient.count > 0) {
         ingredient.count -= 1;
       }
     })

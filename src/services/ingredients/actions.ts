@@ -3,12 +3,15 @@ import { createAction } from '@reduxjs/toolkit';
 import type { TIngredient } from '../../utils/types';
 
 export type IIngredient = {} & TIngredient;
-export type IIngredientWithCount = {
+
+export type IIngredientWithCount = IIngredient & {
   count: number;
-} & IIngredient;
+};
+
+export type IIngredientsSuccessPayload = IIngredient[];
 
 export const getIngredientsRequest = createAction('ingredients/get/request');
-export const getIngredientsSuccess = createAction<IIngredient[]>(
+export const getIngredientsSuccess = createAction<IIngredientsSuccessPayload>(
   'ingredients/get/success'
 );
 export const getIngredientsFailed = createAction('ingredients/get/failed');
