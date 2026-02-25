@@ -1,10 +1,6 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { AppHeader } from '@components/app-header/app-header';
-import BurgerConstructor from '@components/burger-constructor/burger-constructor';
-import { BurgerIngredients } from '@components/burger-ingredients/burger-ingredients';
-
 import { OrderInfo } from '../../components/order-info/order-info';
 import { FeedPage } from '../../pages/feed/feed';
 import ForgotPasswordPage from '../../pages/forgot-password-page/forgot-password-page';
@@ -24,6 +20,9 @@ import { fetchIngredients } from '../../services/ingredients/thunk';
 import { closeModal } from '../../services/modal/actions';
 import { clearOrder } from '../../services/order/actions';
 import { api } from '../../utils/api';
+import { AppHeader } from '../app-header/app-header';
+import BurgerConstructor from '../burger-constructor/burger-constructor';
+import { BurgerIngredients } from '../burger-ingredients/burger-ingredients';
 import IngredientDetails from '../ingredient-details/ingredient-details';
 import Modal from '../modal/modal';
 import OrderDetails from '../order-details/order-details';
@@ -220,12 +219,9 @@ export const App = (): React.JSX.Element => {
             </ProtectedRoute>
           }
         />
-
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/feed/:id" element={<OrderInfo />} />
-
         <Route path="/ingredients/:id" element={<IngredientDetailsPage />} />
-
         <Route
           path="*"
           element={

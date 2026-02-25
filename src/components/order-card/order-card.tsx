@@ -1,7 +1,7 @@
 import { formatDate } from '@/utils/date';
 import { CurrencyIcon } from '@krgaa/react-developer-burger-ui-components';
 import { useSelector } from 'react-redux';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { RootState } from '../../services/store';
 import type { IWsOrder } from '../../services/ws/types';
@@ -17,6 +17,7 @@ type IOrderCardProps = {
 
 export const OrderCard: React.FC<IOrderCardProps> = ({ order, showStatus = false }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { items } = useSelector((state: RootState) => state.ingredients);
 
   const orderIngredients = order.ingredients
@@ -43,21 +44,19 @@ export const OrderCard: React.FC<IOrderCardProps> = ({ order, showStatus = false
 
   const statusInfo = getStatusText(order.status);
 
-  const getOrderPath = () => {
-    if (location.pathname.includes('/profile/orders')) {
-      return {
-        pathname: `/profile/orders/${order.number}`,
-        state: { background: location },
-      };
-    }
-    return {
-      pathname: `/feed/${order.number}`,
+  const handleCardClick = () => {
+    const basePath = location.pathname.includes('/profile/orders')
+      ? `/profile/orders/${order.number}`
+      : `/feed/${order.number}`;
+
+    navigate(basePath, {
       state: { background: location },
-    };
+      replace: false,
+    });
   };
 
   return (
-    <Link to={getOrderPath()} className={styles.link}>
+    <div onClick={handleCardClick} className={styles.link}>
       <div className={`${styles.card} p-6`}>
         <div className={styles.header}>
           <span className="text text_type_digits-default">#{order.number}</span>
@@ -100,6 +99,6 @@ export const OrderCard: React.FC<IOrderCardProps> = ({ order, showStatus = false
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };

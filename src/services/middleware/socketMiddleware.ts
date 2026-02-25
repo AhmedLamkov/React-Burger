@@ -1,22 +1,21 @@
-import { wsActions } from '../ws/actions';
-
 import type { AppDispatch, RootState } from '../store';
 import type { IWsMessage } from '../ws/types';
+import type { TWsActions } from './types';
 import type { Middleware, MiddlewareAPI } from '@reduxjs/toolkit';
 
-type WsAction = {
+type TWsAction = {
   type: string;
   payload?: string;
 };
 
-export const socketMiddleware = (wsUrl: string): Middleware => {
+export const socketMiddleware = (wsUrl: string, wsActions: TWsActions): Middleware => {
   return ((store: MiddlewareAPI<AppDispatch, RootState>) => {
     let socket: WebSocket | null = null;
     let isConnected = false;
     let reconnectTimer = 0;
     let currentUrl = '';
 
-    return (next) => (action: WsAction) => {
+    return (next) => (action: TWsAction) => {
       const { dispatch } = store;
 
       const {

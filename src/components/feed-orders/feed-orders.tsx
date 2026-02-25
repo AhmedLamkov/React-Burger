@@ -48,7 +48,6 @@ export const FeedOrders: React.FC = () => {
   return (
     <div className={styles.container}>
       <div className={styles.ordersSection}>
-        <h2 className="text text_type_main-large mb-5">Лента заказов</h2>
         <div className={styles.ordersList}>
           {orders.map((order) => (
             <OrderCard key={order._id} order={order} />

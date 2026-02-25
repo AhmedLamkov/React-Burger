@@ -11,24 +11,78 @@ import type React from 'react';
 
 import styles from './order-info.module.css';
 
+type TOrderResponse = {
+  success: boolean;
+  orders: IWsOrder[];
+};
+
+const isOrderResponse = (data: unknown): data is TOrderResponse => {
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+
+  const obj = data as Record<string, unknown>;
+
+  return (
+    'success' in obj &&
+    typeof obj.success === 'boolean' &&
+    'orders' in obj &&
+    Array.isArray(obj.orders)
+  );
+};
+
 export const OrderInfo: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { orders } = useSelector((state: RootState) => state.ws);
   const { items } = useSelector((state: RootState) => state.ingredients);
   const [order, setOrder] = useState<IWsOrder | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (orders?.length && id) {
-      const numericId = parseInt(id, 10);
-      if (!isNaN(numericId)) {
-        const foundOrder = orders.find((order: IWsOrder) => order.number === numericId);
-        setOrder(foundOrder ?? null);
+    const fetchOrder = async () => {
+      setIsLoading(true);
+
+      if (orders?.length && id) {
+        const numericId = parseInt(id, 10);
+        if (!isNaN(numericId)) {
+          const foundOrder = orders.find(
+            (order: IWsOrder) => order.number === numericId
+          );
+          if (foundOrder) {
+            setOrder(foundOrder);
+            setIsLoading(false);
+            return;
+          }
+        }
       }
+
+      try {
+        const response = await fetch(
+          `https://norma.education-services.ru/api/orders/${id}`
+        );
+        const data: unknown = await response.json();
+
+        if (isOrderResponse(data) && data.success && data.orders.length > 0) {
+          setOrder(data.orders[0]);
+        }
+      } catch (error) {
+        console.error('Ошибка при загрузке заказа:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchOrder();
     }
-  }, [orders, id]);
+  }, [id, orders]);
+
+  if (isLoading) {
+    return <div className={styles.loading}>Загрузка заказа...</div>;
+  }
 
   if (!order) {
-    return <div className={styles.loading}>Загрузка...</div>;
+    return <div className={styles.loading}>Заказ не найден</div>;
   }
 
   const orderIngredients = order.ingredients
