@@ -1,14 +1,16 @@
 import { configureStore, type Action, type ThunkAction } from '@reduxjs/toolkit';
 
-import { authMiddleware } from './middleware';
+import { authMiddleware, socketMiddleware } from './middleware';
 import { rootReducer } from './reducers';
+
+const wsUrl = 'wss://norma.education-services.ru/orders';
 
 export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat(authMiddleware),
+    }).concat(authMiddleware, socketMiddleware(wsUrl)),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

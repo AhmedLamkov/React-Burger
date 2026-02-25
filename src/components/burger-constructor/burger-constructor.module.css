@@ -1,5 +1,3 @@
-/* Основной контейнер конструктора */
-
 .constructor {
   display: flex;
   flex-direction: column;
@@ -11,23 +9,17 @@
   min-height: 600px;
 }
 
-/* Эффект при наведении для DnD */
-
 .constructor.hover {
   background-color: rgb(133 133 173 / 5%);
   border: 2px dashed #8585ad;
   border-radius: 8px;
 }
 
-/* Секция с булками (верх и низ) */
-
 .bun {
   display: flex;
   justify-content: center;
   width: 100%;
 }
-
-/* Прокручиваемая область для начинок */
 
 .scrollable {
   display: flex;
@@ -38,8 +30,6 @@
   padding-right: 8px;
   overflow: hidden auto;
 }
-
-/* Кастомный скроллбар */
 
 .scrollable::-webkit-scrollbar {
   width: 8px;
@@ -58,8 +48,6 @@
 .scrollable::-webkit-scrollbar-thumb:hover {
   background: #a0a0c8;
 }
-
-/* Пустые состояния */
 
 .empty {
   display: flex;
@@ -97,8 +85,6 @@
   border-color: #4c4cff;
 }
 
-/* Блок с итоговой стоимостью и кнопкой */
-
 .total {
   display: flex;
   align-items: center;
@@ -115,8 +101,6 @@
   width: 36px;
   height: 36px;
 }
-
-/* Адаптивность */
 
 @media (width <= 1200px) {
   .constructor {

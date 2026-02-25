@@ -8,6 +8,7 @@ import { modalReducer } from './modal/reducer';
 import { orderReducer } from './order/reducer';
 import passwordResetReducer from './password-reset/slice';
 import userReducer from './user/slice';
+import { wsReducer } from './ws/reducer';
 
 export const rootReducer = combineReducers({
   ingredients: ingredientsReducer,
@@ -18,4 +19,5 @@ export const rootReducer = combineReducers({
   auth: authReducer,
   user: userReducer,
   passwordReset: passwordResetReducer,
+  ws: wsReducer,
 });

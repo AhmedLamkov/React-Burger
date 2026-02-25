@@ -1,4 +1,4 @@
-import { api } from '../utils/api';
+import { api } from '../../utils/api';
 import {
   registerRequest,
   registerSuccess,
@@ -21,7 +21,7 @@ import {
   resetPasswordRequest,
   resetPasswordSuccess,
   resetPasswordFailed,
-} from './auth/actions';
+} from '../auth/actions';
 
 import type { Middleware } from '@reduxjs/toolkit';
 
@@ -33,8 +33,10 @@ export const authMiddleware: Middleware = (store) => (next) => async (action) =>
     try {
       const data = await api.register(name, email, password);
 
-      localStorage.setItem('accessToken', data.accessToken.replace('Bearer ', ''));
-      localStorage.setItem('refreshToken', data.refreshToken);
+      const cleanToken = data.accessToken.replace('Bearer ', '').trim();
+
+      localStorage.setItem('accessToken', cleanToken);
+      localStorage.setItem('refreshToken', data.refreshToken.trim());
 
       store.dispatch(
         registerSuccess({
@@ -54,8 +56,10 @@ export const authMiddleware: Middleware = (store) => (next) => async (action) =>
     try {
       const data = await api.login(email, password);
 
-      localStorage.setItem('accessToken', data.accessToken.replace('Bearer ', ''));
-      localStorage.setItem('refreshToken', data.refreshToken);
+      const cleanToken = data.accessToken.replace('Bearer ', '').trim();
+
+      localStorage.setItem('accessToken', cleanToken);
+      localStorage.setItem('refreshToken', data.refreshToken.trim());
 
       store.dispatch(
         loginSuccess({
@@ -104,20 +108,16 @@ export const authMiddleware: Middleware = (store) => (next) => async (action) =>
         errorMessage.includes('auth');
 
       if (isAuthError) {
-        console.log('Middleware: Authentication error detected');
-
         try {
           const refreshToken = localStorage.getItem('refreshToken');
           if (refreshToken) {
             const tokenData = await api.refreshToken(refreshToken);
 
-            localStorage.setItem(
-              'accessToken',
-              tokenData.accessToken.replace('Bearer ', '')
-            );
-            localStorage.setItem('refreshToken', tokenData.refreshToken);
+            const newAccessToken = tokenData.accessToken.replace('Bearer ', '').trim();
+            const newRefreshToken = tokenData.refreshToken.trim();
 
-            console.log('Middleware: Token refreshed, retrying getUser...');
+            localStorage.setItem('accessToken', newAccessToken);
+            localStorage.setItem('refreshToken', newRefreshToken);
 
             const userData = await api.getUser();
             store.dispatch(getUserSuccess({ user: userData.user }));
