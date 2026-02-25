@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { WS_CONNECTION_START, WS_DISCONNECT } from '../../services/ws/actions';
+import { WS_CONNECTION_START } from '../../services/ws/actions';
 import { OrderCard } from '../order-card/order-card';
 
 import type { RootState } from '../../services/store';
+import type { IWsOrder } from '../../services/ws/types';
 import type React from 'react';
 
 import styles from './profile-orders.module.css';
@@ -12,16 +13,15 @@ import styles from './profile-orders.module.css';
 export const ProfileOrders: React.FC = () => {
   const dispatch = useDispatch();
   const { orders } = useSelector((state: RootState) => state.ws);
+  const connectionAttempted = useRef(false);
 
   const token = localStorage.getItem('accessToken')?.replace('Bearer ', '').trim() ?? '';
 
   useEffect(() => {
-    if (token) {
+    if (token && !connectionAttempted.current) {
       dispatch({ type: WS_CONNECTION_START, payload: `?token=${token}` });
+      connectionAttempted.current = true;
     }
-    return () => {
-      dispatch({ type: WS_DISCONNECT });
-    };
   }, [dispatch, token]);
 
   if (!token) {
@@ -45,12 +45,13 @@ export const ProfileOrders: React.FC = () => {
   }
 
   const sortedOrders = [...orders].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a: IWsOrder, b: IWsOrder) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   return (
     <div className={styles.ordersList}>
-      {sortedOrders.map((order) => (
+      {sortedOrders.map((order: IWsOrder) => (
         <OrderCard key={order._id} order={order} showStatus={true} />
       ))}
     </div>

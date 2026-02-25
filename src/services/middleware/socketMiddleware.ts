@@ -8,13 +8,12 @@ type TWsAction = {
   payload?: string;
 };
 
+const sockets = new Map<string, WebSocket>();
+const connections = new Map<string, boolean>();
+const timers = new Map<string, number>();
+
 export const socketMiddleware = (wsUrl: string, wsActions: TWsActions): Middleware => {
   return ((store: MiddlewareAPI<AppDispatch, RootState>) => {
-    let socket: WebSocket | null = null;
-    let isConnected = false;
-    let reconnectTimer = 0;
-    let currentUrl = '';
-
     return (next) => (action: TWsAction) => {
       const { dispatch } = store;
 
@@ -30,71 +29,95 @@ export const socketMiddleware = (wsUrl: string, wsActions: TWsActions): Middlewa
       } = wsActions;
 
       if (action.type === wsInit) {
-        currentUrl = action.payload ?? '';
-        const fullUrl = `${wsUrl}${currentUrl}`;
+        const url = action.payload ?? '';
+        const fullUrl = `${wsUrl}${url}`;
+
+        const connectionKey = url.includes('?token') ? 'private' : 'public';
+
+        if (
+          sockets.has(connectionKey) &&
+          sockets.get(connectionKey)?.readyState === WebSocket.OPEN
+        ) {
+          return next(action);
+        }
 
         try {
-          if (socket) {
-            socket.close(1000, 'New connection');
+          if (sockets.has(connectionKey)) {
+            sockets.get(connectionKey)?.close(1000, 'New connection');
           }
 
-          socket = new WebSocket(fullUrl);
-          isConnected = true;
+          const socket = new WebSocket(fullUrl);
+          sockets.set(connectionKey, socket);
+          connections.set(connectionKey, true);
           dispatch({ type: wsConnecting });
-        } catch (error) {
-          dispatch({ type: onError, payload: error });
+
+          socket.onopen = (event) => {
+            dispatch({ type: onOpen, payload: event });
+          };
+
+          socket.onerror = (event) => {
+            dispatch({ type: onError, payload: event });
+          };
+
+          socket.onmessage = (event: MessageEvent) => {
+            try {
+              const data: string = event.data as string;
+              const parsedData: IWsMessage = JSON.parse(data) as IWsMessage;
+
+              if (parsedData.success === false) {
+                const errorMessage: string = parsedData.message ?? 'WebSocket error';
+                dispatch({ type: onError, payload: errorMessage });
+              } else {
+                dispatch({ type: onMessage, payload: parsedData });
+              }
+            } catch {
+              dispatch({ type: onError, payload: 'Failed to parse message' });
+            }
+          };
+
+          socket.onclose = (event) => {
+            dispatch({ type: onClose, payload: event });
+
+            const isConnected = connections.get(connectionKey) ?? false;
+            if (isConnected && event.code !== 1000) {
+              const timer = window.setTimeout(() => {
+                dispatch({ type: wsInit, payload: url });
+              }, 3000);
+              timers.set(connectionKey, timer);
+            }
+          };
+        } catch {
+          dispatch({ type: onError, payload: 'Failed to create WebSocket connection' });
         }
       }
 
-      if (socket) {
-        socket.onopen = (event) => {
-          dispatch({ type: onOpen, payload: event });
-        };
+      if (action.type === wsSendMessage) {
+        const url = action.payload ?? '';
+        const connectionKey = url.includes('?token') ? 'private' : 'public';
+        const socket = sockets.get(connectionKey);
 
-        socket.onerror = (event) => {
-          dispatch({ type: onError, payload: event });
-        };
-
-        socket.onmessage = (event: MessageEvent) => {
-          try {
-            const data: string = event.data as string;
-            const parsedData: IWsMessage = JSON.parse(data) as IWsMessage;
-
-            if (parsedData.success === false) {
-              const errorMessage: string = parsedData.message ?? 'WebSocket error';
-              dispatch({ type: onError, payload: errorMessage });
-            } else {
-              dispatch({ type: onMessage, payload: parsedData });
-            }
-          } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
-            dispatch({ type: onError, payload: 'Failed to parse message' });
-          }
-        };
-
-        socket.onclose = (event) => {
-          dispatch({ type: onClose, payload: event });
-
-          if (isConnected && event.code !== 1000) {
-            reconnectTimer = window.setTimeout(() => {
-              dispatch({ type: wsInit, payload: currentUrl });
-            }, 3000);
-          }
-        };
-
-        if (action.type === wsSendMessage) {
+        if (socket && socket.readyState === WebSocket.OPEN) {
           const message = action.payload;
-          if (message) {
-            socket.send(JSON.stringify(message));
-          }
+          socket.send(JSON.stringify(message));
+        }
+      }
+
+      if (action.type === wsDisconnect) {
+        const url = action.payload ?? '';
+        const connectionKey = url.includes('?token') ? 'private' : 'public';
+
+        connections.set(connectionKey, false);
+
+        const timer = timers.get(connectionKey);
+        if (timer) {
+          clearTimeout(timer);
+          timers.delete(connectionKey);
         }
 
-        if (action.type === wsDisconnect) {
-          isConnected = false;
-          clearTimeout(reconnectTimer);
-          if (socket) {
-            socket.close(1000, 'Работа приложения закончена');
-          }
+        const socket = sockets.get(connectionKey);
+        if (socket) {
+          socket.close(1000, 'Работа приложения закончена');
+          sockets.delete(connectionKey);
         }
       }
 

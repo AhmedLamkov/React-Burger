@@ -4,32 +4,14 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import { api } from '../../utils/api';
+
 import type { RootState } from '../../services/store';
 import type { IWsOrder } from '../../services/ws/types';
 import type { TIngredient } from '../../utils/types';
 import type React from 'react';
 
 import styles from './order-info.module.css';
-
-type TOrderResponse = {
-  success: boolean;
-  orders: IWsOrder[];
-};
-
-const isOrderResponse = (data: unknown): data is TOrderResponse => {
-  if (typeof data !== 'object' || data === null) {
-    return false;
-  }
-
-  const obj = data as Record<string, unknown>;
-
-  return (
-    'success' in obj &&
-    typeof obj.success === 'boolean' &&
-    'orders' in obj &&
-    Array.isArray(obj.orders)
-  );
-};
 
 export const OrderInfo: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,13 +39,9 @@ export const OrderInfo: React.FC = () => {
       }
 
       try {
-        const response = await fetch(
-          `https://norma.education-services.ru/api/orders/${id}`
-        );
-        const data: unknown = await response.json();
-
-        if (isOrderResponse(data) && data.success && data.orders.length > 0) {
-          setOrder(data.orders[0]);
+        if (id) {
+          const foundOrder = await api.getOrderByNumber(id);
+          setOrder(foundOrder);
         }
       } catch (error) {
         console.error('Ошибка при загрузке заказа:', error);

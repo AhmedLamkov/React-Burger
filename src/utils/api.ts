@@ -1,3 +1,4 @@
+import type { IWsOrder } from '../services/ws/types';
 import type {
   IIngredientsResponse,
   IOrderResponse,
@@ -111,6 +112,25 @@ export const api = {
       body: JSON.stringify({ ingredients }),
     });
     return data.order;
+  },
+
+  getOrderByNumber: async (orderNumber: string): Promise<IWsOrder> => {
+    type TOrderByNumberResponse = {
+      success: boolean;
+      orders: IWsOrder[];
+    };
+
+    const data = await fetchWithCheck<TOrderByNumberResponse>(`/orders/${orderNumber}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (data.success && data.orders && data.orders.length > 0) {
+      return data.orders[0];
+    }
+    throw new Error('Заказ не найден');
   },
 
   register: async (

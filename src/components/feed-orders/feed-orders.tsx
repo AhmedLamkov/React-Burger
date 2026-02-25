@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 
-import { WS_CONNECTION_START, WS_DISCONNECT } from '../../services/ws/actions';
+import { WS_CONNECTION_START } from '../../services/ws/actions';
 import { OrderCard } from '../order-card/order-card';
 
 import type { RootState } from '../../services/store';
@@ -13,13 +14,40 @@ import styles from './feed-orders.module.css';
 export const FeedOrders: React.FC = () => {
   const dispatch = useDispatch();
   const { orders, total, totalToday } = useSelector((state: RootState) => state.ws);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const connectionAttempted = useRef(false);
 
   useEffect(() => {
-    dispatch({ type: WS_CONNECTION_START, payload: '/all' });
-    return () => {
-      dispatch({ type: WS_DISCONNECT });
-    };
-  }, [dispatch]);
+    if (!isAuthenticated) return;
+
+    if (!connectionAttempted.current) {
+      const token = localStorage.getItem('accessToken')?.replace('Bearer ', '').trim();
+      if (token) {
+        dispatch({ type: WS_CONNECTION_START, payload: `?token=${token}` });
+        connectionAttempted.current = true;
+      }
+    }
+  }, [dispatch, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className={styles.message}>
+        <p className="text text_type_main-medium">
+          Лента заказов доступна только авторизованным пользователям
+        </p>
+        <p className="text text_type_main-default text_color_inactive mt-2">
+          Пожалуйста,{' '}
+          <Link to="/login" className={styles.link}>
+            войдите
+          </Link>{' '}
+          или{' '}
+          <Link to="/register" className={styles.link}>
+            зарегистрируйтесь
+          </Link>
+        </p>
+      </div>
+    );
+  }
 
   if (!orders || orders.length === 0) {
     return (
@@ -29,9 +57,11 @@ export const FeedOrders: React.FC = () => {
     );
   }
 
-  const doneOrders = orders.filter((order) => order.status === 'done').slice(0, 20);
+  const doneOrders = orders
+    .filter((order: IWsOrder) => order.status === 'done')
+    .slice(0, 20);
   const pendingOrders = orders
-    .filter((order) => order.status === 'pending')
+    .filter((order: IWsOrder) => order.status === 'pending')
     .slice(0, 20);
 
   const splitIntoColumns = (ordersArray: IWsOrder[], columnSize = 10): IWsOrder[][] => {
@@ -49,7 +79,7 @@ export const FeedOrders: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.ordersSection}>
         <div className={styles.ordersList}>
-          {orders.map((order) => (
+          {orders.map((order: IWsOrder) => (
             <OrderCard key={order._id} order={order} />
           ))}
         </div>
@@ -60,9 +90,9 @@ export const FeedOrders: React.FC = () => {
           <div className={styles.ordersColumn}>
             <h3 className="text text_type_main-medium mb-6">Готовы:</h3>
             <div className={styles.columnsContainer}>
-              {doneColumns.map((column, idx) => (
+              {doneColumns.map((column: IWsOrder[], idx: number) => (
                 <div key={idx} className={styles.column}>
-                  {column.map((order) => (
+                  {column.map((order: IWsOrder) => (
                     <span
                       key={order._id}
                       className={`${styles.orderNumber} text text_type_digits-default mb-2`}
@@ -79,9 +109,9 @@ export const FeedOrders: React.FC = () => {
           <div className={styles.ordersColumn}>
             <h3 className="text text_type_main-medium mb-6">В работе:</h3>
             <div className={styles.columnsContainer}>
-              {pendingColumns.map((column, idx) => (
+              {pendingColumns.map((column: IWsOrder[], idx: number) => (
                 <div key={idx} className={styles.column}>
-                  {column.map((order) => (
+                  {column.map((order: IWsOrder) => (
                     <span
                       key={order._id}
                       className={`${styles.orderNumber} text text_type_digits-default mb-2`}
