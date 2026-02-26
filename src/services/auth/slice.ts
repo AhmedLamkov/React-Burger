@@ -34,7 +34,7 @@ const refreshToken = localStorage.getItem('refreshToken');
 
 const initialState: AuthState = {
   user: null,
-  isAuthenticated: !!accessToken, // Устанавливаем true если токен есть
+  isAuthenticated: !!accessToken,
   isLoading: false,
   error: null,
   isAuthChecked: false,
@@ -59,8 +59,6 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.error = null;
-        localStorage.setItem('accessToken', action.payload.accessToken);
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
       .addCase(registerFailed, (state, action) => {
         state.isLoading = false;
@@ -77,8 +75,6 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.error = null;
-        localStorage.setItem('accessToken', action.payload.accessToken);
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
       .addCase(loginFailed, (state, action) => {
         state.isLoading = false;
@@ -95,8 +91,6 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.refreshToken = null;
         state.error = null;
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
       })
       .addCase(logoutFailed, (state, action) => {
         state.isLoading = false;
@@ -118,9 +112,7 @@ const authSlice = createSlice({
         state.user = null;
         state.accessToken = null;
         state.refreshToken = null;
-        state.error = action.payload; // Используем переданное сообщение об ошибке
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        state.error = action.payload;
       })
       .addCase(updateUserRequest, (state) => {
         state.isLoading = true;

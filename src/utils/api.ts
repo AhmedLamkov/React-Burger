@@ -1,3 +1,4 @@
+import type { IWsOrder } from '../services/ws/types';
 import type {
   IIngredientsResponse,
   IOrderResponse,
@@ -58,12 +59,14 @@ const refreshAccessToken = async (): Promise<{
     body: JSON.stringify({ token: refreshToken }),
   });
 
-  localStorage.setItem('accessToken', data.accessToken.replace('Bearer ', ''));
-  localStorage.setItem('refreshToken', data.refreshToken);
+  const cleanAccessToken = data.accessToken.replace('Bearer ', '').trim();
+
+  localStorage.setItem('accessToken', cleanAccessToken);
+  localStorage.setItem('refreshToken', data.refreshToken.trim());
 
   return {
-    accessToken: data.accessToken.replace('Bearer ', ''),
-    refreshToken: data.refreshToken,
+    accessToken: cleanAccessToken,
+    refreshToken: data.refreshToken.trim(),
   };
 };
 
@@ -78,13 +81,13 @@ const retryRequestWithRefresh = async <T extends IBaseApiResponse>(
       ...options,
       headers: {
         ...options.headers,
-        Authorization: accessToken,
+        Authorization: `Bearer ${accessToken}`,
       },
     };
 
     const response = await fetch(`${API_URL}${url}`, newOptions);
     return checkResponse<T>(response);
-  } catch (_error) {
+  } catch {
     throw new Error('Failed to refresh token');
   }
 };
@@ -95,12 +98,12 @@ export const api = {
     return data.data;
   },
 
-  createOrder: async (ingredients: string[]): Promise<IOrderData> => {
-    const accessToken = localStorage.getItem('accessToken');
+  createOrder: async (ingredients: string[], token?: string): Promise<IOrderData> => {
+    const accessToken = token ?? localStorage.getItem('accessToken');
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
     if (accessToken) {
-      headers.Authorization = accessToken;
+      headers.Authorization = `Bearer ${accessToken}`;
     }
 
     const data = await fetchWithCheck<IOrderResponse>('/orders', {
@@ -109,6 +112,25 @@ export const api = {
       body: JSON.stringify({ ingredients }),
     });
     return data.order;
+  },
+
+  getOrderByNumber: async (orderNumber: string): Promise<IWsOrder> => {
+    type TOrderByNumberResponse = {
+      success: boolean;
+      orders: IWsOrder[];
+    };
+
+    const data = await fetchWithCheck<TOrderByNumberResponse>(`/orders/${orderNumber}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (data.success && data.orders && data.orders.length > 0) {
+      return data.orders[0];
+    }
+    throw new Error('Заказ не найден');
   },
 
   register: async (
@@ -140,8 +162,6 @@ export const api = {
   },
 
   refreshToken: async (refreshToken: string): Promise<ITokenResponse> => {
-    console.log('API refreshToken: Refreshing token...');
-
     const response = await fetch(`${API_URL}/auth/token`, {
       method: 'POST',
       headers: {
@@ -149,8 +169,6 @@ export const api = {
       },
       body: JSON.stringify({ token: refreshToken }),
     });
-
-    console.log('API refreshToken: Response status', response.status);
 
     return checkResponse<ITokenResponse>(response);
   },
@@ -166,7 +184,7 @@ export const api = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: accessToken,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
     } catch (error: unknown) {
@@ -200,7 +218,7 @@ export const api = {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: accessToken,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(userData),
       });
@@ -222,14 +240,11 @@ export const api = {
   },
 
   forgotPassword: async (email: string): Promise<IForgotPasswordResponse> => {
-    console.log('Forgot password request for:', email);
-    const response = await fetchWithCheck<IForgotPasswordResponse>('/password-reset', {
+    return fetchWithCheck<IForgotPasswordResponse>('/password-reset', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
-    console.log('Forgot password response:', response);
-    return response;
   },
 
   resetPassword: async (

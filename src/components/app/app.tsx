@@ -1,13 +1,12 @@
 import { useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { AppHeader } from '@components/app-header/app-header';
-import BurgerConstructor from '@components/burger-constructor/burger-constructor';
-import { BurgerIngredients } from '@components/burger-ingredients/burger-ingredients';
-
+import { OrderInfo } from '../../components/order-info/order-info';
+import { FeedPage } from '../../pages/feed/feed';
 import ForgotPasswordPage from '../../pages/forgot-password-page/forgot-password-page';
 import IngredientDetailsPage from '../../pages/ingredient-details-page/ingredient-details-page';
 import LoginPage from '../../pages/login-page/login-page';
+import { ProfileOrdersPage } from '../../pages/profile-orders/profile-orders';
 import ProfilePage from '../../pages/profile-page/profile-page';
 import RegisterPage from '../../pages/register-page/register-page';
 import ResetPasswordPage from '../../pages/reset-password-page/reset-password-page';
@@ -21,6 +20,9 @@ import { fetchIngredients } from '../../services/ingredients/thunk';
 import { closeModal } from '../../services/modal/actions';
 import { clearOrder } from '../../services/order/actions';
 import { api } from '../../utils/api';
+import { AppHeader } from '../app-header/app-header';
+import BurgerConstructor from '../burger-constructor/burger-constructor';
+import { BurgerIngredients } from '../burger-ingredients/burger-ingredients';
 import IngredientDetails from '../ingredient-details/ingredient-details';
 import Modal from '../modal/modal';
 import OrderDetails from '../order-details/order-details';
@@ -66,6 +68,28 @@ const IngredientModal = () => {
       ) : (
         <div className="text text_type_main-default">Ингредиент не найден</div>
       )}
+    </Modal>
+  );
+};
+
+const OrderModal = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleCloseModal = (): void => {
+    const locationState = location.state as LocationState | undefined;
+    const background = locationState?.background;
+
+    if (background) {
+      navigate(background.pathname, { replace: true });
+    } else {
+      navigate(-1);
+    }
+  };
+
+  return (
+    <Modal title="" onClose={handleCloseModal}>
+      <OrderInfo />
     </Modal>
   );
 };
@@ -179,6 +203,24 @@ export const App = (): React.JSX.Element => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/profile/orders"
+          element={
+            <ProtectedRoute>
+              <ProfileOrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderInfo />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/feed" element={<FeedPage />} />
+        <Route path="/feed/:id" element={<OrderInfo />} />
         <Route path="/ingredients/:id" element={<IngredientDetailsPage />} />
         <Route
           path="*"
@@ -194,6 +236,8 @@ export const App = (): React.JSX.Element => {
       {background && (
         <Routes>
           <Route path="/ingredients/:id" element={<IngredientModal />} />
+          <Route path="/feed/:id" element={<OrderModal />} />
+          <Route path="/profile/orders/:id" element={<OrderModal />} />
         </Routes>
       )}
 

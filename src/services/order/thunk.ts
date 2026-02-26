@@ -22,11 +22,19 @@ export const createOrder = (
     dispatch(createOrderRequest());
 
     try {
+      const token = localStorage.getItem('accessToken');
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const data = await fetchWithCheck<TOrderResponse>('/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           ingredients: ingredientIds,
         }),
@@ -52,7 +60,6 @@ export const createOrder = (
         })
       );
     } catch (error: unknown) {
-      console.error('Ошибка при создании заказа:', error);
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
       dispatch(createOrderFailed(errorMessage));
     }
