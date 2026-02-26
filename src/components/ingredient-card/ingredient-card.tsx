@@ -3,9 +3,10 @@ import React, { useRef } from 'react';
 import { useDrag, DragPreviewImage } from 'react-dnd';
 import { Link, useLocation } from 'react-router-dom';
 
+import { addIngredient, addBun } from '../../services/burger-constructor/actions';
 import { useAppDispatch, useAppSelector } from '../../services/hooks';
 import { setIngredientDetails } from '../../services/ingredient-details/actions';
-import { openModal } from '../../services/modal/actions';
+import { incrementIngredientCount } from '../../services/ingredients/actions';
 
 import type { TIngredient } from '@/utils/types';
 
@@ -40,12 +41,19 @@ const IngredientCard: React.FC<IngredientCardProps> = ({ ingredient }) => {
 
   const handleClick = (): void => {
     dispatch(setIngredientDetails(ingredient));
-    dispatch(
-      openModal({
-        type: 'ingredientDetails',
-        data: ingredient,
-      })
-    );
+  };
+
+  const handleAddToConstructor = (e: React.MouseEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (ingredient.type === 'bun') {
+      dispatch(addBun(ingredient));
+    } else {
+      const uniqueId = `${ingredient._id}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      dispatch(addIngredient({ ...ingredient, uniqueId }));
+    }
+    dispatch(incrementIngredientCount(ingredient._id));
   };
 
   return (
@@ -56,17 +64,23 @@ const IngredientCard: React.FC<IngredientCardProps> = ({ ingredient }) => {
         to={`/ingredients/${ingredient._id}`}
         state={{ background: location }}
         className={styles.link}
+        data-testid={`ingredient-link-${ingredient._id}`}
+        onClick={handleClick}
       >
         <div
           ref={ref}
           className={`${styles.ingredient_card} ${isDrag ? styles.dragging : ''}`}
-          onClick={handleClick}
-          data-testid={`ingredient-${ingredient._id}`}
+          data-testid={`ingredient-item-${ingredient._id}`}
         >
           {count > 0 && (
             <Counter count={count} size="default" extraClass={styles.counter} />
           )}
-          <img src={ingredient.image} alt={ingredient.name} className={styles.image} />
+          <img
+            src={ingredient.image}
+            alt={ingredient.name}
+            className={styles.image}
+            data-testid={`ingredient-image-${ingredient._id}`}
+          />
           <div className={styles.ingredient_price}>
             <span className="text text_type_digits-default">{ingredient.price}</span>
             <CurrencyIcon type="primary" />
@@ -76,6 +90,14 @@ const IngredientCard: React.FC<IngredientCardProps> = ({ ingredient }) => {
           </h3>
         </div>
       </Link>
+
+      <button
+        style={{ display: 'none' }}
+        data-testid={`add-ingredient-${ingredient._id}`}
+        onClick={handleAddToConstructor}
+      >
+        Add to constructor
+      </button>
     </>
   );
 };

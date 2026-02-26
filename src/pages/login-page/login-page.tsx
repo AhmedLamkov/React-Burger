@@ -63,10 +63,10 @@ const LoginPage = (): React.JSX.Element => {
   };
 
   return (
-    <div className={styles.container}>
-      <form className={styles.form} onSubmit={handleSubmit}>
+    <div className={styles.container} data-testid="login-page">
+      <form className={styles.form} onSubmit={handleSubmit} data-testid="login-form">
         <h1 className="text text_type_main-medium mb-6">Вход</h1>
-        <div className="mb-6">
+        <div className="mb-6" data-testid="email-input-container">
           <Input
             type="email"
             placeholder="E-mail"
@@ -76,18 +76,20 @@ const LoginPage = (): React.JSX.Element => {
             errorText="Ошибка"
             size="default"
             disabled={isLoading}
+            data-testid="email-input"
           />
         </div>
-        <div className="mb-6">
+        <div className="mb-6" data-testid="password-input-container">
           <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             name="password"
             disabled={isLoading}
+            data-testid="password-input"
           />
         </div>
         {error && (
-          <div className={`${styles.error} mb-6`}>
+          <div className={`${styles.error} mb-6`} data-testid="login-error">
             <p className="text text_type_main-default text_color_error">{error}</p>
           </div>
         )}
@@ -96,6 +98,7 @@ const LoginPage = (): React.JSX.Element => {
           size="medium"
           htmlType="submit"
           disabled={!isValid || isLoading}
+          data-testid="login-submit-button"
         >
           {isLoading ? 'Вход...' : 'Войти'}
         </Button>
@@ -103,13 +106,17 @@ const LoginPage = (): React.JSX.Element => {
       <div className={`${styles.links} mt-20`}>
         <p className="text text_type_main-default text_color_inactive mb-4">
           Вы - новый пользователь?{' '}
-          <Link to="/register" className={styles.link}>
+          <Link to="/register" className={styles.link} data-testid="register-link">
             Зарегистрироваться
           </Link>
         </p>
         <p className="text text_type_main-default text_color_inactive">
           Забыли пароль?{' '}
-          <Link to="/forgot-password" className={styles.link}>
+          <Link
+            to="/forgot-password"
+            className={styles.link}
+            data-testid="forgot-password-link"
+          >
             Восстановить пароль
           </Link>
         </p>

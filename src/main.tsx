@@ -14,7 +14,7 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/React-Burger">
       <Provider store={store}>
         <DndProvider backend={HTML5Backend}>
           <AppComponent />

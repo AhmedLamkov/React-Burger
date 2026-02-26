@@ -60,7 +60,7 @@ const IngredientModal = () => {
     : null;
 
   return (
-    <Modal title="Детали ингредиента" onClose={handleCloseModal}>
+    <Modal title="Детали ингредиента" onClose={handleCloseModal} data-testid="modal">
       {isLoading ? (
         <div className="text text_type_main-default">Загрузка...</div>
       ) : ingredient ? (

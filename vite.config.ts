@@ -19,13 +19,26 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
-  base: '',
+  base: '/React-Burger/',
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./vitest-setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.d.ts',
+        '**/*.test.{ts,tsx}',
+        '**/*.config.{ts,js}',
+        'cypress/**/*'
+      ]
+    }
   },
   server: {
     open: true,
+    port: 5173,
   },
 });

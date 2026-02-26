@@ -1,20 +1,22 @@
 {
-	"compilerOptions": {
-		"target": "es5",
-		"lib": ["es5", "dom"],
-		"sourceMap": true,
-		"noEmit": true,
-		"types": ["cypress", "node"],
-		"allowImportingTsExtensions": true,
-
-		"baseUrl": "..",
-		"paths": {
-			"@/*": ["src/*"],
-			"@components/*": ["src/components/*"],
-			"@services/*": ["src/services/*"],
-			"@utils/*": ["src/utils/*"],
-			"@pages/*": ["src/pages/*"]
-		}
-	},
-	"include": ["**/*.ts"]
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "types": ["cypress", "node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+  "exclude": ["node_modules"]
 }

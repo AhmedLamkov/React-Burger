@@ -1,0 +1,47 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "1",
+      "name": "Булка",
+      "type": "bun",
+      "proteins": 80,
+      "fat": 24,
+      "carbohydrates": 420,
+      "calories": 2400,
+      "price": 100,
+      "image": "https://test.com/bun.png",
+      "image_mobile": "https://test.com/bun-mobile.png",
+      "image_large": "https://test.com/bun-large.png",
+      "__v": 0
+    },
+    {
+      "_id": "2",
+      "name": "Котлета",
+      "type": "main",
+      "proteins": 120,
+      "fat": 150,
+      "carbohydrates": 50,
+      "calories": 800,
+      "price": 200,
+      "image": "https://test.com/cutlet.png",
+      "image_mobile": "https://test.com/cutlet-mobile.png",
+      "image_large": "https://test.com/cutlet-large.png",
+      "__v": 0
+    },
+    {
+      "_id": "3",
+      "name": "Соус",
+      "type": "sauce",
+      "proteins": 10,
+      "fat": 20,
+      "carbohydrates": 30,
+      "calories": 150,
+      "price": 50,
+      "image": "https://test.com/sauce.png",
+      "image_mobile": "https://test.com/sauce-mobile.png",
+      "image_large": "https://test.com/sauce-large.png",
+      "__v": 0
+    }
+  ]
+}
