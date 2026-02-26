@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAppSelector } from '../../services/hooks';
 
-import type { RootState } from '../../services/store';
 import type { IWsOrder } from '../../services/ws/types';
 import type { TIngredient } from '../../utils/types';
 import type React from 'react';
@@ -19,7 +18,7 @@ type IOrderCardProps = {
 export const OrderCard: React.FC<IOrderCardProps> = ({ order, showStatus = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { items } = useAppSelector((state: RootState) => state.ingredients);
+  const { items } = useAppSelector((state) => state.ingredients);
 
   const orderIngredients = order.ingredients
     .map((id: string) => items.find((item: TIngredient) => item._id === id))

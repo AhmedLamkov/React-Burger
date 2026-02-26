@@ -1,14 +1,13 @@
 import { useAppSelector } from '../../services/hooks';
 import { OrderCard } from '../order-card/order-card';
 
-import type { RootState } from '../../services/store';
 import type { IWsOrder } from '../../services/ws/types';
 import type React from 'react';
 
 import styles from './profile-orders.module.css';
 
 export const ProfileOrders: React.FC = () => {
-  const { orders } = useAppSelector((state: RootState) => state.ws);
+  const { orders } = useAppSelector((state) => state.ws);
 
   const token = localStorage.getItem('accessToken')?.replace('Bearer ', '').trim() ?? '';
 

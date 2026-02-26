@@ -7,7 +7,6 @@ import { useAppDispatch, useAppSelector } from '../../services/hooks';
 import { setIngredientDetails } from '../../services/ingredient-details/actions';
 import { openModal } from '../../services/modal/actions';
 
-import type { RootState } from '../../services/store';
 import type { TIngredient } from '@/utils/types';
 
 import styles from './ingredient-card.module.css';
@@ -22,7 +21,7 @@ const IngredientCard: React.FC<IngredientCardProps> = ({ ingredient }) => {
   const location = useLocation();
   const ref = useRef<HTMLDivElement>(null);
 
-  const count = useAppSelector((state: RootState) => {
+  const count = useAppSelector((state) => {
     const foundIngredient = state.ingredients.ingredients.find(
       (item) => item._id === ingredient._id
     );

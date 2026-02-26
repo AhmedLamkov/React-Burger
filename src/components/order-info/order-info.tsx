@@ -6,7 +6,6 @@ import { useParams } from 'react-router-dom';
 import { useAppSelector } from '../../services/hooks';
 import { api } from '../../utils/api';
 
-import type { RootState } from '../../services/store';
 import type { IWsOrder } from '../../services/ws/types';
 import type { TIngredient } from '../../utils/types';
 import type React from 'react';
@@ -15,8 +14,8 @@ import styles from './order-info.module.css';
 
 export const OrderInfo: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { orders } = useAppSelector((state: RootState) => state.ws);
-  const { items } = useAppSelector((state: RootState) => state.ingredients);
+  const { orders } = useAppSelector((state) => state.ws);
+  const { items } = useAppSelector((state) => state.ingredients);
   const [order, setOrder] = useState<IWsOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

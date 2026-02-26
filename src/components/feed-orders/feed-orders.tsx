@@ -1,14 +1,13 @@
 import { useAppSelector } from '../../services/hooks';
 import { OrderCard } from '../order-card/order-card';
 
-import type { RootState } from '../../services/store';
 import type { IWsOrder } from '../../services/ws/types';
 import type React from 'react';
 
 import styles from './feed-orders.module.css';
 
 export const FeedOrders: React.FC = () => {
-  const { orders, total, totalToday } = useAppSelector((state: RootState) => state.ws);
+  const { orders, total, totalToday } = useAppSelector((state) => state.ws);
 
   if (!orders || orders.length === 0) {
     return (
