@@ -20,7 +20,6 @@ import {
 } from '../../services/ingredients/actions';
 import { openModal } from '../../services/modal/actions';
 import { createOrder } from '../../services/order/thunk';
-import { WS_CONNECTION_START, WS_DISCONNECT } from '../../services/ws/actions';
 import ConstructorItem from '../constructor-item/constructor-item';
 
 import type { TIngredient } from '../../utils/types';
@@ -95,21 +94,9 @@ const BurgerConstructor: React.FC = () => {
 
     const ingredientIds = [bun._id, ...ingredients.map((item) => item._id), bun._id];
 
-    const token = localStorage.getItem('accessToken');
-
     dispatch(createOrder(ingredientIds))
       .then(() => {
         dispatch(openModal({ type: 'orderDetails' }));
-
-        dispatch({ type: WS_DISCONNECT });
-
-        setTimeout(() => {
-          dispatch({ type: WS_CONNECTION_START, payload: '/all' });
-          if (token) {
-            const cleanToken = token.replace('Bearer ', '').trim();
-            dispatch({ type: WS_CONNECTION_START, payload: `?token=${cleanToken}` });
-          }
-        }, 1000);
       })
       .catch(() => {
         alert('Не удалось создать заказ. Попробуйте еще раз.');

@@ -1,7 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-import { WS_CONNECTION_START } from '../../services/ws/actions';
+import { useAppSelector } from '../../services/hooks';
 import { OrderCard } from '../order-card/order-card';
 
 import type { RootState } from '../../services/store';
@@ -11,18 +8,9 @@ import type React from 'react';
 import styles from './profile-orders.module.css';
 
 export const ProfileOrders: React.FC = () => {
-  const dispatch = useDispatch();
-  const { orders } = useSelector((state: RootState) => state.ws);
-  const connectionAttempted = useRef(false);
+  const { orders } = useAppSelector((state: RootState) => state.ws);
 
   const token = localStorage.getItem('accessToken')?.replace('Bearer ', '').trim() ?? '';
-
-  useEffect(() => {
-    if (token && !connectionAttempted.current) {
-      dispatch({ type: WS_CONNECTION_START, payload: `?token=${token}` });
-      connectionAttempted.current = true;
-    }
-  }, [dispatch, token]);
 
   if (!token) {
     return (

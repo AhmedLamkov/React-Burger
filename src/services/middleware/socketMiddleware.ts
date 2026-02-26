@@ -9,8 +9,7 @@ type TWsAction = {
 };
 
 const sockets = new Map<string, WebSocket>();
-const connections = new Map<string, boolean>();
-const timers = new Map<string, number>();
+const connectionAttempts = new Map<string, number>();
 
 export const socketMiddleware = (wsUrl: string, wsActions: TWsActions): Middleware => {
   return ((store: MiddlewareAPI<AppDispatch, RootState>) => {
@@ -29,29 +28,45 @@ export const socketMiddleware = (wsUrl: string, wsActions: TWsActions): Middlewa
       } = wsActions;
 
       if (action.type === wsInit) {
-        const url = action.payload ?? '';
-        const fullUrl = `${wsUrl}${url}`;
+        const relativeUrl = action.payload ?? '';
+        const fullUrl = wsUrl + relativeUrl;
+        const connectionKey = fullUrl;
 
-        const connectionKey = url.includes('?token') ? 'private' : 'public';
+        const existingSocket = sockets.get(connectionKey);
 
-        if (
-          sockets.has(connectionKey) &&
-          sockets.get(connectionKey)?.readyState === WebSocket.OPEN
-        ) {
+        if (existingSocket) {
+          const readyState = existingSocket.readyState;
+          if (readyState === 0 || readyState === 1) {
+            return next(action);
+          }
+          if (readyState === 2 || readyState === 3) {
+            try {
+              existingSocket.close(1000, 'Replaced');
+            } catch (_error) {
+              // пустой блок
+            }
+            sockets.delete(connectionKey);
+          }
+        }
+
+        const attempts = connectionAttempts.get(connectionKey) ?? 0;
+        connectionAttempts.set(connectionKey, attempts + 1);
+
+        if (attempts > 3) {
+          setTimeout(() => {
+            connectionAttempts.delete(connectionKey);
+            dispatch({ type: wsInit, payload: relativeUrl });
+          }, 2000);
           return next(action);
         }
 
         try {
-          if (sockets.has(connectionKey)) {
-            sockets.get(connectionKey)?.close(1000, 'New connection');
-          }
-
           const socket = new WebSocket(fullUrl);
           sockets.set(connectionKey, socket);
-          connections.set(connectionKey, true);
           dispatch({ type: wsConnecting });
 
           socket.onopen = (event) => {
+            connectionAttempts.delete(connectionKey);
             dispatch({ type: onOpen, payload: event });
           };
 
@@ -61,67 +76,59 @@ export const socketMiddleware = (wsUrl: string, wsActions: TWsActions): Middlewa
 
           socket.onmessage = (event: MessageEvent) => {
             try {
-              const data: string = event.data as string;
-              const parsedData: IWsMessage = JSON.parse(data) as IWsMessage;
-
+              const data = event.data as string;
+              const parsedData = JSON.parse(data) as IWsMessage;
               if (parsedData.success === false) {
-                const errorMessage: string = parsedData.message ?? 'WebSocket error';
+                const errorMessage = parsedData.message ?? 'WebSocket error';
                 dispatch({ type: onError, payload: errorMessage });
               } else {
                 dispatch({ type: onMessage, payload: parsedData });
               }
-            } catch {
+            } catch (_error) {
               dispatch({ type: onError, payload: 'Failed to parse message' });
             }
           };
 
           socket.onclose = (event) => {
             dispatch({ type: onClose, payload: event });
+            sockets.delete(connectionKey);
 
-            const isConnected = connections.get(connectionKey) ?? false;
-            if (isConnected && event.code !== 1000) {
-              const timer = window.setTimeout(() => {
-                dispatch({ type: wsInit, payload: url });
+            if (event.code !== 1000) {
+              setTimeout(() => {
+                dispatch({ type: wsInit, payload: relativeUrl });
               }, 3000);
-              timers.set(connectionKey, timer);
             }
           };
-        } catch {
+        } catch (_error) {
           dispatch({ type: onError, payload: 'Failed to create WebSocket connection' });
         }
       }
 
       if (action.type === wsSendMessage) {
-        const url = action.payload ?? '';
-        const connectionKey = url.includes('?token') ? 'private' : 'public';
-        const socket = sockets.get(connectionKey);
-
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          const message = action.payload;
-          socket.send(JSON.stringify(message));
-        }
+        // Можно оставить пустым или удалить
       }
 
       if (action.type === wsDisconnect) {
-        const url = action.payload ?? '';
-        const connectionKey = url.includes('?token') ? 'private' : 'public';
-
-        connections.set(connectionKey, false);
-
-        const timer = timers.get(connectionKey);
-        if (timer) {
-          clearTimeout(timer);
-          timers.delete(connectionKey);
+        const relativeUrl = action.payload;
+        if (!relativeUrl) {
+          return next(action);
         }
+        const fullUrl = wsUrl + relativeUrl;
+        const connectionKey = fullUrl;
 
         const socket = sockets.get(connectionKey);
         if (socket) {
-          socket.close(1000, 'Работа приложения закончена');
+          try {
+            socket.close(1000, 'Disconnected by user');
+          } catch (_error) {
+            // пустой блок
+          }
           sockets.delete(connectionKey);
         }
+        connectionAttempts.delete(connectionKey);
       }
 
-      next(action);
+      return next(action);
     };
   }) as Middleware;
 };

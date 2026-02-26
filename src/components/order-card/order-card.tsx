@@ -1,7 +1,8 @@
 import { formatDate } from '@/utils/date';
 import { CurrencyIcon } from '@krgaa/react-developer-burger-ui-components';
-import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+import { useAppSelector } from '../../services/hooks';
 
 import type { RootState } from '../../services/store';
 import type { IWsOrder } from '../../services/ws/types';
@@ -18,7 +19,7 @@ type IOrderCardProps = {
 export const OrderCard: React.FC<IOrderCardProps> = ({ order, showStatus = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { items } = useSelector((state: RootState) => state.ingredients);
+  const { items } = useAppSelector((state: RootState) => state.ingredients);
 
   const orderIngredients = order.ingredients
     .map((id: string) => items.find((item: TIngredient) => item._id === id))

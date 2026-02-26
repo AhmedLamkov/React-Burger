@@ -1,9 +1,9 @@
 import { formatDate } from '@/utils/date';
 import { CurrencyIcon } from '@krgaa/react-developer-burger-ui-components';
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
+import { useAppSelector } from '../../services/hooks';
 import { api } from '../../utils/api';
 
 import type { RootState } from '../../services/store';
@@ -15,8 +15,8 @@ import styles from './order-info.module.css';
 
 export const OrderInfo: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { orders } = useSelector((state: RootState) => state.ws);
-  const { items } = useSelector((state: RootState) => state.ingredients);
+  const { orders } = useAppSelector((state: RootState) => state.ws);
+  const { items } = useAppSelector((state: RootState) => state.ingredients);
   const [order, setOrder] = useState<IWsOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

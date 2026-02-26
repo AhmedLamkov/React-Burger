@@ -1,8 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-
-import { WS_CONNECTION_START } from '../../services/ws/actions';
+import { useAppSelector } from '../../services/hooks';
 import { OrderCard } from '../order-card/order-card';
 
 import type { RootState } from '../../services/store';
@@ -12,42 +8,7 @@ import type React from 'react';
 import styles from './feed-orders.module.css';
 
 export const FeedOrders: React.FC = () => {
-  const dispatch = useDispatch();
-  const { orders, total, totalToday } = useSelector((state: RootState) => state.ws);
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const connectionAttempted = useRef(false);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    if (!connectionAttempted.current) {
-      const token = localStorage.getItem('accessToken')?.replace('Bearer ', '').trim();
-      if (token) {
-        dispatch({ type: WS_CONNECTION_START, payload: `?token=${token}` });
-        connectionAttempted.current = true;
-      }
-    }
-  }, [dispatch, isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className={styles.message}>
-        <p className="text text_type_main-medium">
-          Лента заказов доступна только авторизованным пользователям
-        </p>
-        <p className="text text_type_main-default text_color_inactive mt-2">
-          Пожалуйста,{' '}
-          <Link to="/login" className={styles.link}>
-            войдите
-          </Link>{' '}
-          или{' '}
-          <Link to="/register" className={styles.link}>
-            зарегистрируйтесь
-          </Link>
-        </p>
-      </div>
-    );
-  }
+  const { orders, total, totalToday } = useAppSelector((state: RootState) => state.ws);
 
   if (!orders || orders.length === 0) {
     return (

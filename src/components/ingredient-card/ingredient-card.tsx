@@ -1,9 +1,9 @@
 import { Counter, CurrencyIcon } from '@krgaa/react-developer-burger-ui-components';
 import React, { useRef } from 'react';
 import { useDrag, DragPreviewImage } from 'react-dnd';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 
+import { useAppDispatch, useAppSelector } from '../../services/hooks';
 import { setIngredientDetails } from '../../services/ingredient-details/actions';
 import { openModal } from '../../services/modal/actions';
 
@@ -18,11 +18,11 @@ type IngredientCardProps = {
 };
 
 const IngredientCard: React.FC<IngredientCardProps> = ({ ingredient }) => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const location = useLocation();
   const ref = useRef<HTMLDivElement>(null);
 
-  const count = useSelector((state: RootState) => {
+  const count = useAppSelector((state: RootState) => {
     const foundIngredient = state.ingredients.ingredients.find(
       (item) => item._id === ingredient._id
     );
