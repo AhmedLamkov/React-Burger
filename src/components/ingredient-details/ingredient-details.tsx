@@ -20,7 +20,7 @@ const IngredientDetails: React.FC<IngredientDetailsProps> = ({ ingredient }) => 
 
   if (!currentIngredient) {
     return (
-      <div className={styles.container}>
+      <div className={styles.container} data-testid="ingredient-details-not-found">
         <div className="text text_type_main-default mt-10 mb-10">
           Ингредиент не найден
         </div>
@@ -29,16 +29,20 @@ const IngredientDetails: React.FC<IngredientDetailsProps> = ({ ingredient }) => 
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-testid="ingredient-details">
       <img
         src={currentIngredient.image_large}
         alt={currentIngredient.name}
         className={styles.image}
+        data-testid="ingredient-details-image"
       />
       <h3 className={`${styles.name} text text_type_main-medium mt-4 mb-8`}>
         {currentIngredient.name}
       </h3>
-      <div className={`${styles.nutrition} mb-15`}>
+      <div
+        className={`${styles.nutrition} mb-15`}
+        data-testid="ingredient-details-nutrition"
+      >
         <div className={styles.nutritionItem}>
           <span className="text text_type_main-default text_color_inactive">
             Калории,ккал

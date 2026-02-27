@@ -104,13 +104,21 @@ const ConstructorItem: React.FC<IConstructorItemProps> = ({
       }}
       data-testid={`constructor-item-${index}`}
     >
-      <DragIcon type="primary" />
+      <DragIcon type="primary" data-testid={`constructor-drag-icon-${index}`} />
       <ConstructorElement
         text={ingredient.name}
         price={ingredient.price}
         thumbnail={ingredient.image}
         handleClose={onRemove}
+        data-testid={`constructor-element-${index}`}
       />
+      <button
+        style={{ display: 'none' }}
+        data-testid={`constructor-remove-button-${index}`}
+        onClick={onRemove}
+      >
+        Удалить
+      </button>
     </div>
   );
 };

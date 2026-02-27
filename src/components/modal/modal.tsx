@@ -35,7 +35,11 @@ const Modal: FC<ModalProps> = ({ title, onClose, children }) => {
   return ReactDOM.createPortal(
     <>
       <ModalOverlay onClick={onClose} />
-      <div className={styles.modal} onClick={(e): void => e.stopPropagation()}>
+      <div
+        className={styles.modal}
+        onClick={(e): void => e.stopPropagation()}
+        data-testid="modal"
+      >
         <div className={styles.header}>
           {title && (
             <h2 className={`${styles.title} text text_type_main-large`}>{title}</h2>
@@ -51,7 +55,9 @@ const Modal: FC<ModalProps> = ({ title, onClose, children }) => {
             </button>
           </div>
         </div>
-        <div className={styles.content}>{children}</div>
+        <div className={styles.content} data-testid="modal-content">
+          {children}
+        </div>
       </div>
     </>,
     modalRoot

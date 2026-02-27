@@ -116,8 +116,9 @@ const BurgerConstructor: React.FC = () => {
     <section
       className={`${styles.constructor} pt-25 pl-4 ${isHover ? styles.hover : ''}`}
       ref={ref}
+      data-testid="burger-constructor-section"
     >
-      <div className={styles.bun}>
+      <div className={styles.bun} data-testid="constructor-bun-top-container">
         {bun ? (
           <ConstructorElement
             type="top"
@@ -125,15 +126,19 @@ const BurgerConstructor: React.FC = () => {
             text={`${bun.name} (верх)`}
             price={bun.price}
             thumbnail={bun.image}
+            data-testid="constructor-bun-top"
           />
         ) : (
-          <div className={`${styles.empty} ${styles.top}`}>
+          <div
+            className={`${styles.empty} ${styles.top}`}
+            data-testid="constructor-bun-empty-top"
+          >
             <p className="text text_type_main-default">Перетащите булку сюда</p>
           </div>
         )}
       </div>
 
-      <div className={styles.scrollable}>
+      <div className={styles.scrollable} data-testid="constructor-ingredients-container">
         {ingredients.length > 0 ? (
           ingredients.map((item, index) => (
             <ConstructorItem
@@ -145,13 +150,13 @@ const BurgerConstructor: React.FC = () => {
             />
           ))
         ) : (
-          <div className={styles.empty}>
+          <div className={styles.empty} data-testid="constructor-ingredients-empty">
             <p className="text text_type_main-default">Перетащите начинку сюда</p>
           </div>
         )}
       </div>
 
-      <div className={styles.bun}>
+      <div className={styles.bun} data-testid="constructor-bun-bottom-container">
         {bun ? (
           <ConstructorElement
             type="bottom"
@@ -159,16 +164,20 @@ const BurgerConstructor: React.FC = () => {
             text={`${bun.name} (низ)`}
             price={bun.price}
             thumbnail={bun.image}
+            data-testid="constructor-bun-bottom"
           />
         ) : (
-          <div className={`${styles.empty} ${styles.bottom}`}>
+          <div
+            className={`${styles.empty} ${styles.bottom}`}
+            data-testid="constructor-bun-empty-bottom"
+          >
             <p className="text text_type_main-default">Перетащите булку сюда</p>
           </div>
         )}
       </div>
 
-      <div className={`${styles.total} mt-10`}>
-        <div className={styles.price}>
+      <div className={`${styles.total} mt-10`} data-testid="constructor-total-container">
+        <div className={styles.price} data-testid="constructor-total-price">
           <span className="text text_type_digits-medium">{totalPrice}</span>
           <CurrencyIcon type="primary" />
         </div>
@@ -178,11 +187,19 @@ const BurgerConstructor: React.FC = () => {
           size="large"
           onClick={handleCreateOrder}
           disabled={isOrderButtonDisabled}
+          data-testid="constructor-order-button"
         >
           {isLoading ? 'Оформляем...' : 'Оформить заказ'}
         </Button>
       </div>
-      {error && <p className={`text text_type_main-default mt-2`}>Ошибка: {error}</p>}
+      {error && (
+        <p
+          className={`text text_type_main-default mt-2`}
+          data-testid="constructor-error"
+        >
+          Ошибка: {error}
+        </p>
+      )}
     </section>
   );
 };

@@ -15,7 +15,7 @@ const OrderDetails: FC<OrderDetailsProps> = ({
 }) => {
   if (error) {
     return (
-      <div className={styles.container}>
+      <div className={styles.container} data-testid="order-details-error">
         <p className="text text_type_main-medium text_color_error">Ошибка: {error}</p>
       </div>
     );
@@ -23,7 +23,7 @@ const OrderDetails: FC<OrderDetailsProps> = ({
 
   if (isLoading) {
     return (
-      <div className={styles.container}>
+      <div className={styles.container} data-testid="order-details-loading">
         <p className="text text_type_main-medium">Заказ оформляется...</p>
       </div>
     );
@@ -31,7 +31,10 @@ const OrderDetails: FC<OrderDetailsProps> = ({
 
   return (
     <div className={styles.container} data-testid="order-details">
-      <h2 className={`${styles.orderNumber} text text_type_digits-large mt-30`}>
+      <h2
+        className={`${styles.orderNumber} text text_type_digits-large mt-30`}
+        data-testid="order-number"
+      >
         {orderNumber ?? '----'}
       </h2>
 

@@ -39,6 +39,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"],
+  "include": ["src", "cypress/support/commands.ts", "cypress/tsconfig.json", "cypress/support/index.d.ts"],
   "exclude": ["cypress"],
 }

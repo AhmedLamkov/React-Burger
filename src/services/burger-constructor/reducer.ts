@@ -15,7 +15,7 @@ export type IConstructorState = {
   ingredients: (IIngredient & { uniqueId: string })[];
 };
 
-const initialState: IConstructorState = {
+export const initialState: IConstructorState = {
   bun: null,
   ingredients: [],
 };

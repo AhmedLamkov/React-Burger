@@ -3,12 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://ahmedlamkov.github.io/React-Burger/",
   "scripts": {
     "build": "vite build",
     "commit": "cz",
     "check": "stylelint && eslint src/",
     "cypress:open": "cypress open",
-    "cypress": "cypress run",
+    "cypress:run": "cypress run",
+    "cypress:headed": "cypress run --headed",
+    "cypress:chrome": "cypress run --browser chrome",
     "dev": "vite",
     "deploy": "gh-pages -d dist",
     "eslint": "eslint ./src/ --fix",
@@ -19,7 +22,12 @@
     "preview": "vite preview",
     "stylelint": "stylelint \"./src/**/*.css\" --fix",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch",
+    "test:all": "npm run test:run && npm run cypress:run",
+    "test:ci": "npm run test:run && npm run cypress:run -- --headless"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
