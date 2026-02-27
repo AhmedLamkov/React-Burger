@@ -8,7 +8,7 @@ import {
   decrementIngredientCount,
   resetIngredientsCount,
 } from './actions';
-import { ingredientsReducer, type IIngredientsState } from './reducer';
+import { ingredientsReducer, initialState, type IIngredientsState } from './reducer';
 
 import type { IIngredient } from './actions';
 
@@ -44,13 +44,6 @@ describe('ingredients reducer', () => {
   };
 
   const mockIngredients: IIngredient[] = [mockIngredient, mockIngredient2];
-
-  const initialState: IIngredientsState = {
-    items: [],
-    ingredients: [],
-    isLoading: false,
-    error: false,
-  };
 
   const stateWithIngredients: IIngredientsState = {
     items: mockIngredients,

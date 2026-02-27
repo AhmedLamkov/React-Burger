@@ -7,7 +7,7 @@ import {
   moveIngredient,
   clearConstructor,
 } from './actions';
-import { constructorReducer, type IConstructorState } from './reducer';
+import { constructorReducer, initialState } from './reducer';
 
 import type { IIngredient } from '../ingredients/actions';
 
@@ -15,7 +15,7 @@ describe('burgerConstructor reducer', () => {
   const mockBun: IIngredient = {
     _id: '1',
     name: 'Булка',
-    type: 'bun',
+    type: 'bun' as const,
     price: 100,
     image: 'test.jpg',
     calories: 100,
@@ -30,7 +30,7 @@ describe('burgerConstructor reducer', () => {
   const mockMain: IIngredient = {
     _id: '2',
     name: 'Котлета',
-    type: 'main',
+    type: 'main' as const,
     price: 200,
     image: 'test.jpg',
     calories: 200,
@@ -45,7 +45,7 @@ describe('burgerConstructor reducer', () => {
   const mockSauce: IIngredient = {
     _id: '3',
     name: 'Соус',
-    type: 'sauce',
+    type: 'sauce' as const,
     price: 50,
     image: 'test.jpg',
     calories: 50,
@@ -55,11 +55,6 @@ describe('burgerConstructor reducer', () => {
     image_large: 'test-large.jpg',
     image_mobile: 'test-mobile.jpg',
     __v: 0,
-  };
-
-  const initialState: IConstructorState = {
-    bun: null,
-    ingredients: [],
   };
 
   it('должен возвращать начальное состояние', () => {
